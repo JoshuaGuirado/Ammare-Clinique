@@ -1,0 +1,8 @@
+{
+  "name": "Ammare Clinique",
+  "description": "Catálogo digital premium de kits pós-operatórios personalizados.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
