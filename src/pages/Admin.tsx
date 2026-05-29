@@ -54,10 +54,19 @@ export default function Admin() {
   }, [kits, activeTab]);
 
   const toggleAllSelection = () => {
-    if (selectedItems.length === currentList.length) {
-      setSelectedItems([]);
+    const currentIds = currentList.map(k => k.id);
+    const allSelected = currentIds.every(id => selectedItems.includes(id));
+    
+    if (allSelected) {
+      setSelectedItems(prev => prev.filter(id => !currentIds.includes(id)));
     } else {
-      setSelectedItems(currentList.map(k => k.id));
+      setSelectedItems(prev => {
+        const newItems = [...prev];
+        currentIds.forEach(id => {
+          if (!newItems.includes(id)) newItems.push(id);
+        });
+        return newItems;
+      });
     }
   };
 
@@ -335,13 +344,13 @@ export default function Admin() {
           <div className="flex flex-wrap items-center gap-4">
             <div className="flex bg-ammare-light/10 p-1 rounded-sm mr-2">
               <button 
-                onClick={() => { setActiveTab('kits'); setSelectedItems([]); }}
+                onClick={() => setActiveTab('kits')}
                 className={`px-4 py-2 text-[0.65rem] uppercase tracking-widest transition-colors rounded-sm ${activeTab === 'kits' ? 'bg-ammare-white shadow-sm text-ammare-dark font-medium' : 'text-ammare-dark/50'}`}
               >
                 Kits
               </button>
               <button 
-                onClick={() => { setActiveTab('individuals'); setSelectedItems([]); }}
+                onClick={() => setActiveTab('individuals')}
                 className={`px-4 py-2 text-[0.65rem] uppercase tracking-widest transition-colors rounded-sm ${activeTab === 'individuals' ? 'bg-ammare-white shadow-sm text-ammare-dark font-medium' : 'text-ammare-dark/50'}`}
               >
                 Produtos Individuais

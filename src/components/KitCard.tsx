@@ -5,9 +5,10 @@ import KitModal from './KitModal';
 
 interface KitCardProps {
   kit: Kit;
+  isExclusive?: boolean;
 }
 
-export default function KitCard({ kit }: KitCardProps) {
+export default function KitCard({ kit, isExclusive = false }: KitCardProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   return (
@@ -16,7 +17,7 @@ export default function KitCard({ kit }: KitCardProps) {
         className="group flex flex-col cursor-pointer h-full"
         onClick={() => setIsModalOpen(true)}
       >
-        <div className="relative aspect-[3/4] overflow-hidden bg-ammare-light/10 mb-6 w-full">
+        <div className={`relative aspect-[3/4] overflow-hidden mb-6 w-full ${isExclusive ? 'bg-ammare-white/5' : 'bg-ammare-light/10'}`}>
           <img 
             src={kit.imageUrl} 
             alt={kit.name}
@@ -29,17 +30,17 @@ export default function KitCard({ kit }: KitCardProps) {
         </div>
         
         <div className="flex flex-col flex-grow">
-          <span className="text-[0.6rem] font-sans tracking-[0.2em] uppercase text-ammare-dark/40 mb-3 block">
+          <span className={`text-[0.6rem] font-sans tracking-[0.2em] uppercase mb-3 block ${isExclusive ? 'text-ammare-white/40' : 'text-ammare-dark/40'}`}>
             {kit.category}
           </span>
-          <h3 className="font-serif text-2xl text-ammare-dark leading-tight mb-2 group-hover:text-black transition-colors duration-300">
+          <h3 className={`font-serif text-2xl leading-tight mb-2 transition-colors duration-300 ${isExclusive ? 'text-ammare-white group-hover:text-ammare-light' : 'text-ammare-dark group-hover:text-black'}`}>
             {kit.name}
           </h3>
-          <p className="font-sans text-sm text-ammare-dark/60 font-light mb-6 leading-relaxed flex-grow">
+          <p className={`font-sans text-sm font-light mb-6 leading-relaxed flex-grow ${isExclusive ? 'text-ammare-white/60' : 'text-ammare-dark/60'}`}>
             {kit.shortDescription}
           </p>
           
-          <div className="mt-auto flex items-center text-ammare-dark/30 group-hover:text-ammare-dark transition-colors duration-500">
+          <div className={`mt-auto flex items-center transition-colors duration-500 ${isExclusive ? 'text-ammare-white/30 group-hover:text-ammare-white' : 'text-ammare-dark/30 group-hover:text-ammare-dark'}`}>
              <span className="text-[0.65rem] uppercase tracking-widest mr-3 font-medium">Explorar</span>
              <div className="w-6 group-hover:w-10 h-[1px] bg-current transition-all duration-500 ease-out" />
           </div>
