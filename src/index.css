@@ -1,12 +1,28 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:wght@400;500;600;700&display=swap');
 @import "tailwindcss";
 
-@theme {
+:root {
   --color-ammare-bg: #F0F0EE;
   --color-ammare-dark: #212322;
   --color-ammare-light: #CFCDC9;
   --color-ammare-black: #000000;
   --color-ammare-white: #FFFFFF;
+}
+
+html.dark {
+  --color-ammare-bg: #1A1A18;
+  --color-ammare-dark: #EAEBE9;
+  --color-ammare-light: #4A4844;
+  --color-ammare-black: #FFFFFF;
+  --color-ammare-white: #111111;
+}
+
+@theme {
+  --color-ammare-bg: var(--color-ammare-bg);
+  --color-ammare-dark: var(--color-ammare-dark);
+  --color-ammare-light: var(--color-ammare-light);
+  --color-ammare-black: var(--color-ammare-black);
+  --color-ammare-white: var(--color-ammare-white);
 
   --font-serif: "Playfair Display", serif;
   --font-sans: "Inter", sans-serif;

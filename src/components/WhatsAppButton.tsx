@@ -14,7 +14,7 @@ export default function WhatsAppButton() {
       whileTap={{ scale: 0.95 }}
       transition={{ duration: 0.4, ease: "easeOut" }}
       onClick={handleWhatsApp}
-      className="fixed bottom-8 right-8 z-40 bg-ammare-dark text-white p-[1.15rem] shadow-2xl hover:bg-black transition-all duration-300 group flex items-center justify-center overflow-hidden"
+      className="fixed bottom-8 right-8 z-40 bg-ammare-dark text-ammare-white p-[1.15rem] shadow-2xl hover:bg-ammare-black transition-all duration-300 group flex items-center justify-center overflow-hidden"
       aria-label="Contato via WhatsApp"
     >
       <MessageCircle className="w-5 h-5 relative z-10" strokeWidth={1.5} />

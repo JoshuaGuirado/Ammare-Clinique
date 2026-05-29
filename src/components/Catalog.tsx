@@ -1,25 +1,36 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Search } from 'lucide-react';
 import { useAppContext } from '../store';
 import KitCard from './KitCard';
+import { useSearchParams } from 'react-router-dom';
 
 export default function Catalog() {
   const { kits, categories } = useAppContext();
   const [activeCategory, setActiveCategory] = useState('Todos');
   const [searchQuery, setSearchQuery] = useState('');
+  const [searchParams] = useSearchParams();
 
-  const filteredKits = kits.filter(kit => {
-    const matchesCategory = activeCategory === 'Todos' || kit.category === activeCategory;
-    const isActive = kit.isActive !== false;
-    const searchLower = searchQuery.toLowerCase();
-    const matchesSearch = 
-      kit.name.toLowerCase().includes(searchLower) || 
-      kit.shortDescription.toLowerCase().includes(searchLower) ||
-      kit.fullDescription.toLowerCase().includes(searchLower);
+  const filteredKits = useMemo(() => {
+    const itemsParam = searchParams.get('items');
+    const allowedIds = itemsParam ? itemsParam.split(',') : null;
+    
+    return kits.filter(kit => {
+      if (allowedIds && !allowedIds.includes(kit.id)) {
+        return false;
+      }
       
-    return matchesCategory && isActive && matchesSearch;
-  });
+      const matchesCategory = activeCategory === 'Todos' || kit.category === activeCategory;
+      const isActive = kit.isActive !== false;
+      const searchLower = searchQuery.toLowerCase();
+      const matchesSearch = 
+        kit.name.toLowerCase().includes(searchLower) || 
+        kit.shortDescription.toLowerCase().includes(searchLower) ||
+        kit.fullDescription.toLowerCase().includes(searchLower);
+        
+      return matchesCategory && isActive && matchesSearch;
+    });
+  }, [kits, activeCategory, searchQuery, searchParams]);
 
   return (
     <section id="catalogo" className="py-24 bg-ammare-bg">

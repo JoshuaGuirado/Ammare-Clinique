@@ -1,8 +1,26 @@
 import { Link } from 'react-router-dom';
 import { motion } from 'motion/react';
-import { Aperture } from 'lucide-react';
+import { Aperture, Moon, Sun } from 'lucide-react';
+import { useState, useEffect } from 'react';
 
 export default function Header() {
+  const [isDark, setIsDark] = useState(() => {
+    return localStorage.getItem('ammare_theme') === 'dark';
+  });
+
+  useEffect(() => {
+    const root = window.document.documentElement;
+    if (isDark) {
+      root.classList.add('dark');
+      localStorage.setItem('ammare_theme', 'dark');
+    } else {
+      root.classList.remove('dark');
+      localStorage.setItem('ammare_theme', 'light');
+    }
+  }, [isDark]);
+
+  const toggleTheme = () => setIsDark(!isDark);
+
   return (
     <header className="sticky top-0 z-40 bg-ammare-bg/80 backdrop-blur-md border-b border-ammare-dark/5">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -31,6 +49,13 @@ export default function Header() {
           </Link>
 
           <nav className="flex items-center space-x-10">
+            <button 
+              onClick={toggleTheme}
+              className="text-ammare-dark/40 hover:text-ammare-dark transition-colors duration-300"
+              aria-label="Toggle theme"
+            >
+              {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+            </button>
             <Link to="/" className="text-[0.65rem] uppercase tracking-[0.2em] text-ammare-dark hover:text-ammare-dark/50 transition-colors duration-300">Catálogo</Link>
             <Link to="/admin" className="text-[0.65rem] uppercase tracking-[0.2em] text-ammare-dark/30 hover:text-ammare-dark transition-colors duration-300">Admin</Link>
           </nav>

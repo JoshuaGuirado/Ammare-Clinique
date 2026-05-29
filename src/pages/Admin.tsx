@@ -1,10 +1,12 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useAppContext } from '../store';
 import { Kit } from '../types';
 import Header from '../components/Header';
-import { Pencil, Trash2, Plus, Save, X, LogIn } from 'lucide-react';
-import { motion } from 'motion/react';
+import { Pencil, Trash2, Plus, Save, X, LogIn, Download, FileSpreadsheet, FileText, Share2, CheckSquare, Square } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
 import { categories } from '../data';
+import { List } from 'react-window';
+import * as XLSX from 'xlsx';
 
 export default function Admin() {
   const { kits, categories, updateKit, removeKit, addKit, addCategory, removeCategory } = useAppContext();
@@ -21,6 +23,8 @@ export default function Admin() {
   const [colorsInput, setColorsInput] = useState('');
   
   const [activeTab, setActiveTab] = useState<'kits' | 'individuals'>('kits');
+  const [selectedItems, setSelectedItems] = useState<string[]>([]);
+  const [shareCopied, setShareCopied] = useState(false);
 
   const [isManagingCategories, setIsManagingCategories] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState('');
@@ -39,6 +43,106 @@ export default function Admin() {
   const handleLogout = () => {
     setIsAuthenticated(false);
     localStorage.removeItem('ammare_admin_auth');
+  };
+
+  const toggleSelection = (id: string) => {
+    setSelectedItems(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
+  };
+
+  const currentList = useMemo(() => {
+    return kits.filter(k => activeTab === 'kits' ? !k.isIndividual : k.isIndividual);
+  }, [kits, activeTab]);
+
+  const toggleAllSelection = () => {
+    if (selectedItems.length === currentList.length) {
+      setSelectedItems([]);
+    } else {
+      setSelectedItems(currentList.map(k => k.id));
+    }
+  };
+
+  const handleShareSelected = () => {
+    if (selectedItems.length === 0) return;
+    const url = new URL(window.location.href);
+    url.pathname = '/';
+    url.search = '';
+    url.searchParams.set('items', selectedItems.join(','));
+    navigator.clipboard.writeText(url.toString());
+    setShareCopied(true);
+    setTimeout(() => setShareCopied(false), 2000);
+  };
+
+  const getExportData = () => {
+    const isKits = activeTab === 'kits';
+    const listToExport = kits.filter(k => isKits ? !k.isIndividual : k.isIndividual);
+
+    const headers = isKits ? [
+      'ID',
+      'Nome',
+      'Categoria',
+      'Descrição Curta',
+      'Descrição Completa',
+      'Itens',
+      'Status'
+    ] : [
+      'ID',
+      'Nome',
+      'Categoria',
+      'Descrição Curta',
+      'Descrição Completa',
+      'Tamanhos',
+      'Cores',
+      'Status'
+    ];
+
+    const rows = listToExport.map(kit => isKits ? [
+      kit.id,
+      kit.name,
+      kit.category,
+      kit.shortDescription,
+      kit.fullDescription,
+      kit.items ? kit.items.map(i => i.name).join(' | ') : '',
+      kit.isActive !== false ? 'Ativo' : 'Desativado'
+    ] : [
+      kit.id,
+      kit.name,
+      kit.category,
+      kit.shortDescription,
+      kit.fullDescription,
+      kit.sizes ? kit.sizes.join(' | ') : '',
+      kit.colors ? kit.colors.join(' | ') : '',
+      kit.isActive !== false ? 'Ativo' : 'Desativado'
+    ]);
+    
+    const typeLabel = isKits ? 'kits' : 'produtos_individuais';
+    return { headers, rows, typeLabel };
+  };
+
+  const handleExportCSV = () => {
+    const { headers, rows, typeLabel } = getExportData();
+    const csvContent = [
+      headers.join(';'),
+      ...rows.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(';'))
+    ].join('\n');
+
+    // Add BOM for UTF-8 to work correctly with Excel
+    const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', `ammare_estoque_${typeLabel}_${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const handleExportExcel = () => {
+    const { headers, rows, typeLabel } = getExportData();
+    const worksheet = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, activeTab === 'kits' ? "Kits" : "Produtos");
+    XLSX.writeFile(workbook, `ammare_estoque_${typeLabel}_${new Date().toISOString().split('T')[0]}.xlsx`);
   };
 
   const initEditForm = (kit: Kit) => {
@@ -185,7 +289,7 @@ export default function Admin() {
         <main className="flex-1 flex items-center justify-center p-4">
           <motion.div 
             initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-            className="w-full max-w-md bg-white p-8 md:p-12 shadow-2xl rounded-sm"
+            className="w-full max-w-md bg-ammare-white p-8 md:p-12 shadow-2xl rounded-sm"
           >
             <div className="text-center mb-8">
               <h2 className="font-serif text-3xl text-ammare-dark mb-2">Acesso Restrito</h2>
@@ -206,7 +310,7 @@ export default function Admin() {
               </div>
               <button 
                 type="submit"
-                className="w-full py-4 bg-ammare-dark text-white text-[0.7rem] uppercase tracking-[0.2em] hover:bg-black transition-colors flex justify-center items-center gap-2"
+                className="w-full py-4 bg-ammare-dark text-ammare-white text-[0.7rem] uppercase tracking-[0.2em] hover:bg-ammare-black transition-colors flex justify-center items-center gap-2"
               >
                 <LogIn className="w-4 h-4" /> Entrar
               </button>
@@ -231,14 +335,14 @@ export default function Admin() {
           <div className="flex flex-wrap items-center gap-4">
             <div className="flex bg-ammare-light/10 p-1 rounded-sm mr-2">
               <button 
-                onClick={() => setActiveTab('kits')}
-                className={`px-4 py-2 text-[0.65rem] uppercase tracking-widest transition-colors rounded-sm ${activeTab === 'kits' ? 'bg-white shadow-sm text-ammare-dark font-medium' : 'text-ammare-dark/50'}`}
+                onClick={() => { setActiveTab('kits'); setSelectedItems([]); }}
+                className={`px-4 py-2 text-[0.65rem] uppercase tracking-widest transition-colors rounded-sm ${activeTab === 'kits' ? 'bg-ammare-white shadow-sm text-ammare-dark font-medium' : 'text-ammare-dark/50'}`}
               >
                 Kits
               </button>
               <button 
-                onClick={() => setActiveTab('individuals')}
-                className={`px-4 py-2 text-[0.65rem] uppercase tracking-widest transition-colors rounded-sm ${activeTab === 'individuals' ? 'bg-white shadow-sm text-ammare-dark font-medium' : 'text-ammare-dark/50'}`}
+                onClick={() => { setActiveTab('individuals'); setSelectedItems([]); }}
+                className={`px-4 py-2 text-[0.65rem] uppercase tracking-widest transition-colors rounded-sm ${activeTab === 'individuals' ? 'bg-ammare-white shadow-sm text-ammare-dark font-medium' : 'text-ammare-dark/50'}`}
               >
                 Produtos Individuais
               </button>
@@ -247,7 +351,28 @@ export default function Admin() {
             <button onClick={() => setIsManagingCategories(true)} className="px-4 py-3 border border-ammare-light/50 text-ammare-dark/60 rounded-sm text-[0.65rem] uppercase tracking-widest hover:text-ammare-dark hover:border-ammare-dark transition-colors hidden md:block">
               Categorias
             </button>
-            <button onClick={handleAddClick} className="flex items-center gap-2 px-6 py-3 bg-ammare-dark text-white rounded-sm text-[0.65rem] uppercase tracking-widest hover:bg-black transition-colors">
+            <button 
+              onClick={handleShareSelected} 
+              disabled={selectedItems.length === 0}
+              className="flex items-center gap-2 px-4 py-3 border border-ammare-light/50 text-ammare-dark/60 rounded-sm text-[0.65rem] uppercase tracking-widest hover:text-ammare-dark hover:border-ammare-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <Share2 className="w-4 h-4" /> 
+              {shareCopied ? 'Copiado!' : `Compartilhar (${selectedItems.length})`}
+            </button>
+            <div className="relative group hidden md:block">
+              <button className="flex items-center gap-2 px-4 py-3 border border-ammare-light/50 text-ammare-dark/60 rounded-sm text-[0.65rem] uppercase tracking-widest hover:text-ammare-dark hover:border-ammare-dark transition-colors">
+                <Download className="w-4 h-4" /> Exportar
+              </button>
+              <div className="absolute top-full mt-2 right-0 bg-ammare-white border border-ammare-light/20 shadow-xl rounded-sm opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all w-40 z-50 flex flex-col py-1">
+                <button onClick={handleExportCSV} className="flex items-center gap-2 px-4 py-3 text-left text-[0.65rem] text-ammare-dark/70 uppercase tracking-widest hover:bg-ammare-bg/80 transition-colors border-b border-ammare-light/10">
+                  <FileText className="w-4 h-4" /> CSV (.csv)
+                </button>
+                <button onClick={handleExportExcel} className="flex items-center gap-2 px-4 py-3 text-left text-[0.65rem] text-ammare-dark/70 uppercase tracking-widest hover:bg-ammare-bg/80 transition-colors">
+                  <FileSpreadsheet className="w-4 h-4" /> Excel (.xlsx)
+                </button>
+              </div>
+            </div>
+            <button onClick={handleAddClick} className="flex items-center gap-2 px-6 py-3 bg-ammare-dark text-ammare-white rounded-sm text-[0.65rem] uppercase tracking-widest hover:bg-ammare-black transition-colors">
               <Plus className="w-4 h-4" />
               Adicionar {activeTab === 'kits' ? 'Kit' : 'Produto'}
             </button>
@@ -257,61 +382,79 @@ export default function Admin() {
           </div>
         </div>
 
-        <div className="bg-white rounded-sm shadow-xl shadow-black/5 border border-ammare-light/20 overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="bg-ammare-bg/50 border-b border-ammare-dark/5">
-                  <th className="px-6 py-4 text-[0.65rem] uppercase tracking-widest text-ammare-dark/40 font-medium">
-                    {activeTab === 'kits' ? 'Kit' : 'Produto'}
-                  </th>
-                  <th className="px-6 py-4 text-[0.65rem] uppercase tracking-widest text-ammare-dark/40 font-medium">Nome & Descrição</th>
-                  <th className="px-6 py-4 text-[0.65rem] uppercase tracking-widest text-ammare-dark/40 font-medium hidden md:table-cell">Categoria</th>
-                  <th className="px-6 py-4 text-[0.65rem] uppercase tracking-widest text-ammare-dark/40 font-medium text-right">Ações</th>
-                </tr>
-              </thead>
-              <tbody>
-                {kits.filter(k => activeTab === 'kits' ? !k.isIndividual : k.isIndividual).map((kit, i) => (
-                  <tr key={`${kit.id}-${i}`} className="border-b border-ammare-light/10 hover:bg-ammare-bg/30 transition-colors">
-                    <td className="px-6 py-4 w-24">
-                      {kit.imageUrl ? (
-                        <div className="w-16 h-16 rounded overflow-hidden bg-ammare-light/10">
-                          <img src={kit.imageUrl} alt={kit.name} className="w-full h-full object-cover" />
+        <div className="bg-ammare-white rounded-sm shadow-xl shadow-black/5 border border-ammare-light/20 overflow-hidden">
+          <div className="overflow-x-auto min-w-[700px]">
+            <div className="w-full text-left border-collapse flex flex-col">
+              <div className="bg-ammare-bg/50 border-b border-ammare-dark/5 flex w-full items-center">
+                <div className="px-6 py-4 w-16 shrink-0 flex items-center justify-center">
+                  <button onClick={toggleAllSelection} className="text-ammare-dark/40 hover:text-ammare-dark transition-colors rounded-full p-1" title={selectedItems.length === currentList.length ? "Desmarcar todos" : "Marcar todos"}>
+                    {selectedItems.length > 0 && selectedItems.length === currentList.length ? <CheckSquare className="w-5 h-5" /> : <Square className="w-5 h-5" />}
+                  </button>
+                </div>
+                <div className="px-6 py-4 text-[0.65rem] uppercase tracking-widest text-ammare-dark/40 font-medium w-32 shrink-0">
+                  {activeTab === 'kits' ? 'Kit' : 'Produto'}
+                </div>
+                <div className="px-6 py-4 text-[0.65rem] uppercase tracking-widest text-ammare-dark/40 font-medium flex-1">Nome & Descrição</div>
+                <div className="px-6 py-4 text-[0.65rem] uppercase tracking-widest text-ammare-dark/40 font-medium w-48 shrink-0 hidden md:block">Categoria</div>
+                <div className="px-6 py-4 text-[0.65rem] uppercase tracking-widest text-ammare-dark/40 font-medium w-32 shrink-0 text-right">Ações</div>
+              </div>
+              <div className="w-full">
+                <List
+                  style={{ height: 500, width: '100%' }}
+                  rowCount={currentList.length}
+                  rowHeight={100}
+                  rowProps={{ data: currentList, onEdit: handleEditClick, onDelete: handleDelete, selectedItems, toggleSelection }}
+                  rowComponent={({ index, style, data, onEdit, onDelete, selectedItems, toggleSelection }: any) => {
+                    const kit = data[index];
+                    const isSelected = selectedItems.includes(kit.id);
+                    return (
+                      <div style={style} className={`flex border-b border-ammare-light/10 hover:bg-ammare-bg/30 transition-colors w-full items-center box-border ${isSelected ? 'bg-ammare-light/10' : ''}`}>
+                        <div className="px-6 py-4 w-16 shrink-0 h-full flex items-center justify-center">
+                          <button onClick={() => toggleSelection(kit.id)} className={`transition-colors rounded-full p-1 ${isSelected ? 'text-ammare-dark' : 'text-ammare-dark/20 hover:text-ammare-dark/40'}`}>
+                            {isSelected ? <CheckSquare className="w-5 h-5" /> : <Square className="w-5 h-5" />}
+                          </button>
                         </div>
-                      ) : (
-                        <div className="w-16 h-16 rounded bg-ammare-light/20 flex items-center justify-center text-[10px] text-ammare-dark/30 tracking-wider">
-                          N/A
+                        <div className="px-6 py-4 w-32 shrink-0 h-full flex items-center">
+                          {kit.imageUrl ? (
+                            <div className="w-16 h-16 rounded overflow-hidden bg-ammare-light/10 shrink-0">
+                              <img src={kit.imageUrl} alt={kit.name} className="w-full h-full object-cover" />
+                            </div>
+                          ) : (
+                            <div className="w-16 h-16 rounded bg-ammare-light/20 flex items-center justify-center text-[10px] text-ammare-dark/30 tracking-wider shrink-0">
+                              N/A
+                            </div>
+                          )}
                         </div>
-                      )}
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="font-serif text-lg text-ammare-dark flex items-center gap-3">
-                        {kit.name || 'Sem nome'}
-                        {kit.isActive === false && (
-                          <span className="px-2 py-0.5 border border-red-500/20 text-red-600 bg-red-50 text-[0.55rem] uppercase tracking-widest rounded-sm">
-                            Desativado
-                          </span>
-                        )}
+                        <div className="px-6 py-4 flex-1 h-full flex flex-col justify-center overflow-hidden cursor-pointer" onClick={() => toggleSelection(kit.id)}>
+                          <div className="font-serif text-lg text-ammare-dark flex items-center gap-3 truncate" onClick={(e) => e.stopPropagation()}>
+                            {kit.name || 'Sem nome'}
+                            {kit.isActive === false && (
+                              <span className="px-2 py-0.5 border border-red-500/20 text-red-600 bg-red-50 text-[0.55rem] uppercase tracking-widest rounded-sm shrink-0">
+                                Desativado
+                              </span>
+                            )}
+                          </div>
+                          <div className="text-xs text-ammare-dark/50 mt-1 truncate max-w-[250px] md:max-w-md font-light">{kit.shortDescription || 'Sem descrição'}</div>
+                        </div>
+                        <div className="px-6 py-4 w-48 shrink-0 h-full hidden md:flex items-center text-[0.7rem] uppercase tracking-widest text-ammare-dark/50 truncate">
+                          {kit.category}
+                        </div>
+                        <div className="px-6 py-4 w-32 shrink-0 h-full flex items-center justify-end text-right">
+                          <div className="flex justify-end gap-3">
+                            <button onClick={() => onEdit(kit)} className="p-2 text-ammare-dark/40 hover:text-ammare-dark hover:bg-ammare-light/10 rounded transition-all" title="Editar">
+                              <Pencil className="w-4 h-4" />
+                            </button>
+                            <button onClick={(e) => onDelete(kit.id, e)} className="p-2 rounded transition-all flex items-center gap-2 text-ammare-dark/40 hover:text-red-600 hover:bg-red-50" title="Excluir">
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </div>
                       </div>
-                      <div className="text-xs text-ammare-dark/50 mt-1 truncate max-w-[250px] font-light">{kit.shortDescription || 'Sem descrição'}</div>
-                    </td>
-                    <td className="px-6 py-4 hidden md:table-cell text-[0.7rem] uppercase tracking-widest text-ammare-dark/50">
-                      {kit.category}
-                    </td>
-                    <td className="px-6 py-4 text-right">
-                      <div className="flex justify-end gap-3">
-                        <button onClick={() => handleEditClick(kit)} className="p-2 text-ammare-dark/40 hover:text-ammare-dark hover:bg-ammare-light/10 rounded transition-all" title="Editar">
-                          <Pencil className="w-4 h-4" />
-                        </button>
-                        <button onClick={(e) => handleDelete(kit.id, e)} className="p-2 rounded transition-all flex items-center gap-2 text-ammare-dark/40 hover:text-red-600 hover:bg-red-50" title="Excluir">
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                    );
+                  }}
+                />
+              </div>
+            </div>
           </div>
         </div>
       </main>
@@ -322,7 +465,7 @@ export default function Admin() {
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-white w-full max-w-lg shadow-2xl flex flex-col rounded-sm"
+            className="bg-ammare-white w-full max-w-lg shadow-2xl flex flex-col rounded-sm"
           >
             <div className="p-6 border-b border-ammare-light/30 flex justify-between items-center">
               <div>
@@ -339,11 +482,11 @@ export default function Admin() {
                   value={newCategoryName} 
                   onChange={(e) => setNewCategoryName(e.target.value)}
                   placeholder="Nova categoria..."
-                  className="flex-1 px-4 py-3 bg-white border border-ammare-light/40 focus:outline-none focus:border-ammare-dark rounded-sm transition-colors text-sm"
+                  className="flex-1 px-4 py-3 bg-ammare-white border border-ammare-light/40 focus:outline-none focus:border-ammare-dark rounded-sm transition-colors text-sm"
                 />
                 <button 
                   onClick={handleAddCategory}
-                  className="px-6 py-3 bg-ammare-dark text-white rounded-sm text-[0.65rem] uppercase tracking-widest hover:bg-black transition-colors"
+                  className="px-6 py-3 bg-ammare-dark text-ammare-white rounded-sm text-[0.65rem] uppercase tracking-widest hover:bg-ammare-black transition-colors"
                 >
                   Adicionar
                 </button>
@@ -375,7 +518,7 @@ export default function Admin() {
             animate={{ opacity: 1, y: 0 }}
             className="bg-ammare-white w-full h-full md:h-auto md:max-h-[90vh] md:max-w-4xl shadow-2xl flex flex-col"
           >
-            <div className="p-6 border-b border-ammare-light/30 flex justify-between items-center bg-white">
+            <div className="p-6 border-b border-ammare-light/30 flex justify-between items-center bg-ammare-white">
               <div>
                 <h2 className="font-serif text-2xl text-ammare-dark">
                   {editingKitId.startsWith('kit-') && !kits.some(k => k.id === editingKitId) 
@@ -399,7 +542,7 @@ export default function Admin() {
                     value={editForm.name} 
                     onChange={(e) => setEditForm({...editForm, name: e.target.value})}
                     placeholder="Ex: Kit Pós Operatório Premium"
-                    className="w-full px-4 py-3 bg-white border border-ammare-light/40 focus:outline-none focus:border-ammare-dark rounded-sm transition-colors text-sm mb-4"
+                    className="w-full px-4 py-3 bg-ammare-white border border-ammare-light/40 focus:outline-none focus:border-ammare-dark rounded-sm transition-colors text-sm mb-4"
                   />
                   <label className="flex items-center gap-2 cursor-pointer">
                     <input 
@@ -417,7 +560,7 @@ export default function Admin() {
                   <select 
                     value={editForm.category}
                     onChange={(e) => setEditForm({...editForm, category: e.target.value})}
-                    className="w-full px-4 py-3 bg-white border border-ammare-light/40 focus:outline-none focus:border-ammare-dark rounded-sm transition-colors text-sm appearance-none"
+                    className="w-full px-4 py-3 bg-ammare-white border border-ammare-light/40 focus:outline-none focus:border-ammare-dark rounded-sm transition-colors text-sm appearance-none"
                   >
                     {categories.filter(c => c !== 'Todos').map((c, i) => (
                       <option key={`${c}-${i}`} value={c}>{c}</option>
@@ -433,7 +576,7 @@ export default function Admin() {
                   value={editForm.shortDescription} 
                   onChange={(e) => setEditForm({...editForm, shortDescription: e.target.value})}
                   placeholder={`Aparece no card do ${editForm.isIndividual ? 'produto' : 'kit'}...`}
-                  className="w-full px-4 py-3 bg-white border border-ammare-light/40 focus:outline-none focus:border-ammare-dark rounded-sm transition-colors text-sm"
+                  className="w-full px-4 py-3 bg-ammare-white border border-ammare-light/40 focus:outline-none focus:border-ammare-dark rounded-sm transition-colors text-sm"
                 />
               </div>
 
@@ -444,7 +587,7 @@ export default function Admin() {
                   onChange={(e) => setEditForm({...editForm, fullDescription: e.target.value})}
                   rows={4}
                   placeholder={`Descrição detalhada que aparece dentro da página do ${editForm.isIndividual ? 'produto' : 'kit'}...`}
-                  className="w-full px-4 py-3 bg-white border border-ammare-light/40 focus:outline-none focus:border-ammare-dark rounded-sm transition-colors text-sm resize-y"
+                  className="w-full px-4 py-3 bg-ammare-white border border-ammare-light/40 focus:outline-none focus:border-ammare-dark rounded-sm transition-colors text-sm resize-y"
                 />
               </div>
 
@@ -459,7 +602,7 @@ export default function Admin() {
                       onChange={(e) => setItemsInput(e.target.value)}
                       rows={5}
                       placeholder="Cinta modeladora&#10;Placa abdominal&#10;Espuma..."
-                      className="w-full px-4 py-3 bg-white border border-ammare-light/40 focus:outline-none focus:border-ammare-dark rounded-sm transition-colors text-sm whitespace-pre-wrap leading-relaxed"
+                      className="w-full px-4 py-3 bg-ammare-white border border-ammare-light/40 focus:outline-none focus:border-ammare-dark rounded-sm transition-colors text-sm whitespace-pre-wrap leading-relaxed"
                     />
                   </div>
                 )}
@@ -475,7 +618,7 @@ export default function Admin() {
                       value={sizesInput} 
                       onChange={(e) => setSizesInput(e.target.value)}
                       placeholder="P, M, G, GG..."
-                      className="w-full px-4 py-3 bg-white border border-ammare-light/40 focus:outline-none focus:border-ammare-dark rounded-sm transition-colors text-sm mb-6"
+                      className="w-full px-4 py-3 bg-ammare-white border border-ammare-light/40 focus:outline-none focus:border-ammare-dark rounded-sm transition-colors text-sm mb-6"
                     />
                     
                     <label className="block text-[0.65rem] uppercase tracking-widest text-ammare-dark/50 mb-3">
@@ -486,7 +629,7 @@ export default function Admin() {
                       value={colorsInput} 
                       onChange={(e) => setColorsInput(e.target.value)}
                       placeholder="Nude, Preto, Branco..."
-                      className="w-full px-4 py-3 bg-white border border-ammare-light/40 focus:outline-none focus:border-ammare-dark rounded-sm transition-colors text-sm"
+                      className="w-full px-4 py-3 bg-ammare-white border border-ammare-light/40 focus:outline-none focus:border-ammare-dark rounded-sm transition-colors text-sm"
                     />
                   </div>
                   <div>
@@ -511,7 +654,7 @@ export default function Admin() {
                         value={editForm.imageUrl} 
                         onChange={(e) => setEditForm({...editForm, imageUrl: e.target.value})}
                         placeholder="https://exemplo.com/imagem.png"
-                        className="w-full px-4 py-3 bg-white border border-ammare-light/40 focus:outline-none focus:border-ammare-dark rounded-sm transition-colors text-sm"
+                        className="w-full px-4 py-3 bg-ammare-white border border-ammare-light/40 focus:outline-none focus:border-ammare-dark rounded-sm transition-colors text-sm"
                       />
                       {editForm.imageUrl && (
                          <div className="mt-2 text-xs text-green-600 tracking-wider">Imagem selecionada/informada.</div>
@@ -558,7 +701,7 @@ export default function Admin() {
 
             </div>
 
-            <div className="p-6 border-t border-ammare-light/20 bg-white flex justify-end gap-4">
+            <div className="p-6 border-t border-ammare-light/20 bg-ammare-white flex justify-end gap-4">
               <button 
                 onClick={handleCancel}
                 className="px-6 py-3 text-[0.65rem] uppercase tracking-widest text-ammare-dark/50 hover:text-ammare-dark transition-colors"
@@ -567,7 +710,7 @@ export default function Admin() {
               </button>
               <button 
                 onClick={handleSave}
-                className="flex items-center gap-2 px-8 py-3 bg-ammare-dark text-white rounded-sm text-[0.65rem] uppercase tracking-widest hover:bg-black transition-colors"
+                className="flex items-center gap-2 px-8 py-3 bg-ammare-dark text-ammare-white rounded-sm text-[0.65rem] uppercase tracking-widest hover:bg-ammare-black transition-colors"
               >
                 <Save className="w-4 h-4" />
                 Salvar Alterações

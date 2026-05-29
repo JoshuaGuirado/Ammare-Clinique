@@ -54,9 +54,9 @@ export default function KitModal({ kit, onClose }: KitModalProps) {
       />
       
       <motion.div
-         initial={{ opacity: 0, y: "100%", md: { y: 40, scale: 0.98 } }}
+         initial={{ opacity: 0, y: "100%" }}
          animate={{ opacity: 1, y: 0, scale: 1 }}
-         exit={{ opacity: 0, y: "100%", md: { y: 40, scale: 0.98 } }}
+         exit={{ opacity: 0, y: "100%" }}
          transition={{ duration: 0.4, ease: "easeOut" }}
          className="relative w-full max-w-6xl h-[100dvh] md:h-[85vh] bg-ammare-bg shadow-2xl flex flex-col md:flex-row overflow-hidden"
       >
