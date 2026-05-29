@@ -16,7 +16,7 @@ export default function Hero() {
           <span className="block text-[0.65rem] tracking-[0.4em] uppercase text-ammare-dark/40 mb-8 font-light">
             Catálogo Exclusivo
           </span>
-          <h2 className="font-serif text-5xl md:text-6xl lg:text-[5.5rem] text-ammare-dark mb-10 leading-[1.05] tracking-tight">
+          <h2 className="font-serif text-4xl sm:text-5xl md:text-6xl lg:text-[5.5rem] text-ammare-dark mb-10 leading-[1.05] tracking-tight">
             A arte da recuperação<br />perfeita.
           </h2>
           <p className="font-sans text-sm md:text-base text-ammare-dark/60 mb-14 max-w-lg mx-auto font-light leading-relaxed">

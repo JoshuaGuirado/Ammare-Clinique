@@ -11,11 +11,11 @@ export default function Catalog() {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchParams] = useSearchParams();
 
-  const isExclusive = searchParams.has('items');
+  const isExclusive = searchParams.has('items') || searchParams.get('theme') === 'exclusive';
 
   const filteredKits = useMemo(() => {
     const itemsParam = searchParams.get('items');
-    const allowedIds = itemsParam ? itemsParam.split(',') : null;
+    const allowedIds = itemsParam ? itemsParam.split('_') : null;
     
     return kits.filter(kit => {
       if (allowedIds) {
@@ -35,7 +35,7 @@ export default function Catalog() {
   }, [kits, activeCategory, searchQuery, searchParams]);
 
   return (
-    <section id="catalogo" className={`py-24 min-h-screen transition-colors duration-700 ${isExclusive ? 'bg-ammare-dark text-ammare-white' : 'bg-ammare-bg text-ammare-dark'}`}>
+    <section id="catalogo" className={`py-24 flex-grow transition-colors duration-700 ${isExclusive ? 'bg-ammare-dark text-ammare-white' : 'bg-ammare-bg text-ammare-dark'}`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Header & Categories */}
@@ -53,12 +53,12 @@ export default function Catalog() {
 
           {!isExclusive && (
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-ammare-dark/5 pb-2">
-              <div className="flex flex-wrap gap-6 md:gap-8">
+              <div className="flex overflow-x-auto no-scrollbar gap-6 md:gap-8 pb-1 border-b border-transparent">
                 {categories.map((cat, i) => (
                   <button
                     key={`${cat}-${i}`}
                     onClick={() => setActiveCategory(cat)}
-                    className={`text-[0.65rem] uppercase tracking-[0.2em] transition-colors duration-500 pb-1 relative ${
+                    className={`whitespace-nowrap flex-shrink-0 text-[0.65rem] uppercase tracking-[0.2em] transition-colors duration-500 pb-1 relative ${
                       activeCategory === cat 
                         ? 'text-ammare-dark font-medium' 
                         : 'text-ammare-dark/40 hover:text-ammare-dark/80 font-light'

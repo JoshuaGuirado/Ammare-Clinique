@@ -75,7 +75,8 @@ export default function Admin() {
     const url = new URL(window.location.href);
     url.pathname = '/';
     url.search = '';
-    url.searchParams.set('items', selectedItems.join(','));
+    url.searchParams.set('items', selectedItems.join('_'));
+    url.searchParams.set('theme', 'exclusive');
     navigator.clipboard.writeText(url.toString());
     setShareCopied(true);
     setTimeout(() => setShareCopied(false), 2000);
