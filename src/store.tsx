@@ -243,22 +243,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem('ammare_products', JSON.stringify(products));
   }, [products]);
 
-  // Pre-load custom kit selection from shared URL if local storage is empty
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const itemsParam = params.get('items');
-    if (itemsParam && customKitSelectedIds.length === 0) {
-      const allowedIds = itemsParam.split('_');
-      // Pre-fill individual products that are recommended in the URL
-      const individualProductIds = kits
-        .filter(k => k.isIndividual && allowedIds.includes(k.id))
-        .map(k => k.id);
-        
-      if (individualProductIds.length > 0) {
-        setCustomKitSelectedIds(individualProductIds);
-      }
-    }
-  }, [kits, customKitSelectedIds]);
+
 
   useEffect(() => {
     localStorage.setItem('ammare_custom_kit', JSON.stringify(customKitSelectedIds));
