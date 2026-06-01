@@ -151,10 +151,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
         let finalCategories = categories;
         if (!dbCategories || dbCategories.length === 0) {
-          // Seed DB with categories, excluding "Todos" which is UI-only
-          const seedCategories = initialCategories.filter(cat => cat !== 'Todos').map(cat => ({ name: cat }));
+          // Seed DB using local categories state to preserve additions
+          const seedCategories = categories.filter(cat => cat !== 'Todos').map(cat => ({ name: cat }));
           await supabase.from('categories').insert(seedCategories);
-          finalCategories = initialCategories;
+          finalCategories = categories;
         } else {
           finalCategories = ['Todos', ...dbCategories.map(c => c.name)];
           
@@ -177,14 +177,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
         let finalProducts = products;
         if (!dbProducts || dbProducts.length === 0) {
-          // Seed DB
-          const seedProducts = initialProducts.map(p => ({
-            id: p.id,
-            name: p.name,
-            category: p.category
-          }));
+          // Seed DB using local products state to preserve custom ones
+          const seedProducts = products.map(mapProductToDB);
           await supabase.from('products').insert(seedProducts);
-          finalProducts = initialProducts;
+          finalProducts = products;
         } else {
           finalProducts = dbProducts.map(mapDBToProduct);
           
@@ -207,10 +203,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
         let finalKits = kits;
         if (!dbKits || dbKits.length === 0) {
-          // Seed DB
-          const seedKits = initialKits.map(mapKitToDB);
+          // Seed DB using local kits state to preserve all custom kits and products
+          const seedKits = kits.map(mapKitToDB);
           await supabase.from('kits').insert(seedKits);
-          finalKits = initialKits;
+          finalKits = kits;
         } else {
           finalKits = dbKits.map(mapDBToKit);
           
