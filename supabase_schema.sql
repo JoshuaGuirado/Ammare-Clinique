@@ -84,3 +84,10 @@ INSERT INTO kits (id, name, short_description, full_description, items, image_ur
     false
   )
 ON CONFLICT (id) DO NOTHING;
+
+-- 4. Desativar RLS (Row Level Security) nas tabelas
+-- Isso permite leitura e escrita pública diretamente pelo cliente com a chave anon
+ALTER TABLE categories DISABLE ROW LEVEL SECURITY;
+ALTER TABLE products DISABLE ROW LEVEL SECURITY;
+ALTER TABLE kits DISABLE ROW LEVEL SECURITY;
+
