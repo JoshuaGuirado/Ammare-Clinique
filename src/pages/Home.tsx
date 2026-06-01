@@ -74,7 +74,7 @@ export default function Home() {
         <Catalog />
       </main>
       
-      <footer className="bg-ammare-dark py-24 pb-12">
+      <footer className="bg-ammare-dark dark:bg-black py-24 pb-12 relative z-10 border-t border-ammare-white/5">
         <div className="max-w-7xl mx-auto px-4 flex flex-col items-center">
           <Aperture className="w-8 h-8 text-ammare-white/[0.15] mb-6" strokeWidth={1} />
           <h2 className="font-serif text-2xl tracking-[0.15em] text-ammare-white/90 uppercase mb-3">

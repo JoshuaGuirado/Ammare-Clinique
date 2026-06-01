@@ -129,6 +129,21 @@ export default function Header() {
             )}
             
             <Link 
+              to="/personalizar-produto" 
+              className={`text-[0.55rem] sm:text-[0.6rem] md:text-[0.65rem] uppercase tracking-[0.15em] sm:tracking-[0.2em] transition-all duration-300 pb-0.5 font-medium
+                ${location.pathname === '/personalizar-produto'
+                  ? 'text-ammare-primary border-b border-ammare-primary'
+                  : showCurated
+                    ? 'text-ammare-white/60 hover:text-ammare-white'
+                    : 'text-ammare-dark/60 hover:text-ammare-dark'
+                }
+              `}
+            >
+              <span className="hidden md:inline">Personalizar Frasco</span>
+              <span className="md:hidden">Personalizar</span>
+            </Link>
+
+            <Link 
               to={getKitBuilderURL()} 
               className={`flex items-center space-x-1.5 text-[0.55rem] sm:text-[0.6rem] md:text-[0.65rem] uppercase tracking-[0.15em] sm:tracking-[0.2em] transition-all duration-300 pb-0.5 font-medium
                 ${location.pathname === '/meu-kit'
