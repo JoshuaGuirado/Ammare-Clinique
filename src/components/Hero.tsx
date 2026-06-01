@@ -2,7 +2,7 @@ import { motion } from 'motion/react';
 
 export default function Hero() {
   return (
-    <div className="relative bg-ammare-bg flex items-center justify-center min-h-[80vh] overflow-hidden">
+    <div className="relative bg-transparent flex items-center justify-center min-h-[80vh] overflow-hidden">
       {/* Decorative subtle element - optimized for performance */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-ammare-light/5 rounded-full pointer-events-none" />
       

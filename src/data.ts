@@ -18,6 +18,7 @@ export const initialKits: Kit[] = [
       'https://images.unsplash.com/photo-1556228578-8d89b331f4fc?auto=format&fit=crop&w=800&q=80'
     ],
     category: 'Lipoaspiração e Abdominoplastia',
+    price: 850.00,
     sizes: ['P', 'M', 'G', 'GG'],
     observations: 'Recomendamos a consulta com seu cirurgião para definir os tamanhos adequados antes da pré-reserva.',
   },
@@ -34,6 +35,7 @@ export const initialKits: Kit[] = [
     imageUrl: 'https://images.unsplash.com/photo-1608248543803-ba4f8c70ae0b?auto=format&fit=crop&w=800&q=80',
     galleryUrls: [],
     category: 'Modelagem Localizada',
+    price: 420.00,
     sizes: ['Único'],
   }
 ];

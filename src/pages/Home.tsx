@@ -32,7 +32,7 @@ export default function Home() {
       transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
       className={`min-h-screen flex flex-col relative overflow-hidden ${showCurated ? 'bg-ammare-dark' : 'bg-ammare-bg'}`}
     >
-      {showCurated && <LuxuryBackground />}
+      <LuxuryBackground />
       <Header />
       {showCurated ? (
         <div className="pt-32 pb-10 text-center px-4 bg-transparent max-w-4xl mx-auto no-print relative z-10">

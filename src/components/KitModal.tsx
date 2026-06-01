@@ -110,6 +110,11 @@ export default function KitModal({ kit, onClose }: KitModalProps) {
               <h2 className="font-serif text-3xl md:text-5xl text-ammare-dark mb-8 leading-tight">
                 {kit.name}
               </h2>
+              {kit.price && (
+                <div className="text-xl font-serif font-semibold text-ammare-primary tracking-wider mb-8 -mt-4">
+                  {kit.price.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                </div>
+              )}
               
               <div className="h-[1px] w-12 bg-ammare-dark/10 mb-8" />
               

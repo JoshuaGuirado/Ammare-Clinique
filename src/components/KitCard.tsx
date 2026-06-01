@@ -50,6 +50,11 @@ export default function KitCard({ kit, isExclusive = false }: KitCardProps) {
           <h3 className={`font-serif text-2xl leading-tight mb-2 transition-colors duration-300 ${isExclusive ? 'text-ammare-white group-hover:text-ammare-light' : 'text-ammare-dark group-hover:text-black'}`}>
             {kit.name}
           </h3>
+          {kit.price && (
+            <span className="text-[0.75rem] font-sans font-medium tracking-wide mb-3 block text-ammare-primary">
+              {kit.price.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+            </span>
+          )}
           <p className={`font-sans text-sm font-light mb-6 leading-relaxed flex-grow ${isExclusive ? 'text-ammare-white/60' : 'text-ammare-dark/60'}`}>
             {kit.shortDescription}
           </p>
