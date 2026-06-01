@@ -612,12 +612,26 @@ export default function Admin() {
                   <select 
                     value={editForm.category}
                     onChange={(e) => setEditForm({...editForm, category: e.target.value})}
-                    className="w-full px-4 py-3 bg-ammare-white border border-ammare-light/40 focus:outline-none focus:border-ammare-dark rounded-sm transition-colors text-sm appearance-none"
+                    className="w-full px-4 py-3 bg-ammare-white border border-ammare-light/40 focus:outline-none focus:border-ammare-dark rounded-sm transition-colors text-sm appearance-none mb-4"
                   >
                     {categories.filter(c => c !== 'Todos').map((c, i) => (
                       <option key={`${c}-${i}`} value={c}>{c}</option>
                     ))}
                   </select>
+                  
+                  <label className="block text-[0.65rem] uppercase tracking-widest text-ammare-dark/50 mb-3">Preço (R$)</label>
+                  <input 
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={editForm.price !== undefined && editForm.price !== null ? editForm.price : ''}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setEditForm({...editForm, price: val ? parseFloat(val) : undefined});
+                    }}
+                    placeholder="Ex: 850.00 (Deixe vazio para ocultar o preço)"
+                    className="w-full px-4 py-3 bg-ammare-white border border-ammare-light/40 focus:outline-none focus:border-ammare-dark rounded-sm transition-colors text-sm"
+                  />
                 </div>
               </div>
 

@@ -8,7 +8,6 @@ import { AppProvider } from './store';
 import Home from './pages/Home';
 import Admin from './pages/Admin';
 import CustomKit from './pages/CustomKit';
-import PersonalizarProduto from './pages/PersonalizarProduto';
 
 export default function App() {
   return (
@@ -20,7 +19,6 @@ export default function App() {
               <Route path="/" element={<Home />} />
               <Route path="/admin" element={<Admin />} />
               <Route path="/meu-kit" element={<CustomKit />} />
-              <Route path="/personalizar-produto" element={<PersonalizarProduto />} />
             </Routes>
           </main>
         </div>
