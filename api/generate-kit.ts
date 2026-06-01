@@ -1,5 +1,10 @@
 import { GoogleGenAI } from "@google/genai";
 
+export const config = {
+  maxDuration: 60, // Aumenta o tempo limite de execução para até 60 segundos (limite Hobby na Vercel)
+};
+
+
 async function imageUrlToBase64(url: string): Promise<{ mimeType: string; data: string } | null> {
   if (!url) return null;
   if (url.startsWith('data:')) {
