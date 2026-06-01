@@ -151,20 +151,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
         let finalCategories = categories;
         if (!dbCategories || dbCategories.length === 0) {
-          // Seed DB using local categories state to preserve additions
+          // Se o banco estiver vazio (primeira vez), semeia com os dados locais
           const seedCategories = categories.filter(cat => cat !== 'Todos').map(cat => ({ name: cat }));
           await supabase.from('categories').insert(seedCategories);
           finalCategories = categories;
         } else {
+          // Se o banco tem dados, ele é a fonte única da verdade
           finalCategories = ['Todos', ...dbCategories.map(c => c.name)];
-          
-          // Sync local-only categories to Supabase
-          const dbCatNames = new Set(dbCategories.map(c => c.name));
-          const localOnlyCats = categories.filter(c => c !== 'Todos' && !dbCatNames.has(c));
-          if (localOnlyCats.length > 0) {
-            await supabase.from('categories').insert(localOnlyCats.map(name => ({ name })));
-            finalCategories = [...finalCategories, ...localOnlyCats];
-          }
         }
         setCategories(finalCategories);
 
@@ -177,20 +170,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
         let finalProducts = products;
         if (!dbProducts || dbProducts.length === 0) {
-          // Seed DB using local products state to preserve custom ones
+          // Se o banco estiver vazio (primeira vez), semeia com os dados locais
           const seedProducts = products.map(mapProductToDB);
           await supabase.from('products').insert(seedProducts);
           finalProducts = products;
         } else {
+          // Se o banco tem dados, ele é a fonte única da verdade
           finalProducts = dbProducts.map(mapDBToProduct);
-          
-          // Sync local-only products to Supabase
-          const dbProdIds = new Set(dbProducts.map(p => p.id));
-          const localOnlyProds = products.filter(p => !dbProdIds.has(p.id));
-          if (localOnlyProds.length > 0) {
-            await supabase.from('products').insert(localOnlyProds.map(mapProductToDB));
-            finalProducts = [...finalProducts, ...localOnlyProds];
-          }
         }
         setProducts(finalProducts);
 
@@ -203,22 +189,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
         let finalKits = kits;
         if (!dbKits || dbKits.length === 0) {
-          // Seed DB using local kits state to preserve all custom kits and products
+          // Se o banco estiver vazio (primeira vez), semeia com os dados locais
           const seedKits = kits.map(mapKitToDB);
           await supabase.from('kits').insert(seedKits);
           finalKits = kits;
         } else {
+          // Se o banco tem dados, ele é a fonte única da verdade
           finalKits = dbKits.map(mapDBToKit);
-          
-          // CRITICAL SYNC: Upload any local-only kits/products to Supabase!
-          const dbKitIds = new Set(dbKits.map(k => k.id));
-          const localOnlyKits = kits.filter(k => !dbKitIds.has(k.id));
-          
-          if (localOnlyKits.length > 0) {
-            const mappedLocalKits = localOnlyKits.map(mapKitToDB);
-            await supabase.from('kits').insert(mappedLocalKits);
-            finalKits = [...finalKits, ...localOnlyKits];
-          }
         }
         setKits(finalKits);
 
