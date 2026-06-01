@@ -82,7 +82,18 @@ export default function Admin() {
     const customSelectedKits = kits.filter(k => selectedItems.includes(k.id) && !initialKitIds.has(k.id));
     if (customSelectedKits.length > 0) {
       try {
-        const encoded = btoa(encodeURIComponent(JSON.stringify(customSelectedKits)));
+        // Strip large base64 image strings from products/kits to avoid HTTP 431 errors in URL
+        const cleanedSelectedKits = customSelectedKits.map(kit => {
+          const cleaned = { ...kit };
+          if (cleaned.imageUrl && cleaned.imageUrl.startsWith('data:')) {
+            cleaned.imageUrl = '';
+          }
+          if (cleaned.galleryUrls) {
+            cleaned.galleryUrls = cleaned.galleryUrls.map(url => url.startsWith('data:') ? '' : url).filter(Boolean);
+          }
+          return cleaned;
+        });
+        const encoded = btoa(encodeURIComponent(JSON.stringify(cleanedSelectedKits)));
         url.searchParams.set('c', encoded);
       } catch (e) {
         console.error("Error encoding custom kits", e);
@@ -165,6 +176,10 @@ export default function Admin() {
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, activeTab === 'kits' ? "Kits" : "Produtos");
     XLSX.writeFile(workbook, `ammare_estoque_${typeLabel}_${new Date().toISOString().split('T')[0]}.xlsx`);
+  };
+
+  const handleExportPDF = () => {
+    window.print();
   };
 
   const initEditForm = (kit: Kit) => {
@@ -307,7 +322,12 @@ export default function Admin() {
 
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-ammare-bg font-sans flex flex-col">
+      <motion.div 
+        initial={{ opacity: 0, y: 15 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+        className="min-h-screen bg-ammare-bg font-sans flex flex-col"
+      >
         <Header />
         <main className="flex-1 flex items-center justify-center p-4">
           <motion.div 
@@ -340,15 +360,21 @@ export default function Admin() {
             </form>
           </motion.div>
         </main>
-      </div>
+      </motion.div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-ammare-bg font-sans">
-      <Header />
-      
-      <main className="max-w-7xl mx-auto px-4 py-12">
+    <motion.div 
+      initial={{ opacity: 0, y: 15 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+      className="min-h-screen bg-ammare-bg font-sans"
+    >
+      <div className="no-print">
+        <Header />
+        
+        <main className="max-w-7xl mx-auto px-4 py-12">
         <div className="mb-12 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
           <div>
             <h1 className="font-serif text-3xl text-ammare-dark mb-2">Painel Administrativo</h1>
@@ -383,15 +409,18 @@ export default function Admin() {
               {shareCopied ? 'Copiado!' : `Compartilhar (${selectedItems.length})`}
             </button>
             <div className="relative group hidden md:block">
-              <button className="flex items-center gap-2 px-4 py-3 border border-ammare-light/50 text-ammare-dark/60 rounded-sm text-[0.65rem] uppercase tracking-widest hover:text-ammare-dark hover:border-ammare-dark transition-colors">
+              <button className="flex items-center gap-2 px-4 py-3 border border-ammare-light/50 text-ammare-dark/60 rounded-sm text-[0.65rem] uppercase tracking-widest hover:text-ammare-dark hover:border-ammare-dark transition-colors cursor-pointer">
                 <Download className="w-4 h-4" /> Exportar
               </button>
               <div className="absolute top-full mt-2 right-0 bg-ammare-white border border-ammare-light/20 shadow-xl rounded-sm opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all w-40 z-50 flex flex-col py-1">
-                <button onClick={handleExportCSV} className="flex items-center gap-2 px-4 py-3 text-left text-[0.65rem] text-ammare-dark/70 uppercase tracking-widest hover:bg-ammare-bg/80 transition-colors border-b border-ammare-light/10">
+                <button onClick={handleExportCSV} className="flex items-center gap-2 px-4 py-3 text-left text-[0.65rem] text-ammare-dark/70 uppercase tracking-widest hover:bg-ammare-bg/80 transition-colors border-b border-ammare-light/10 cursor-pointer">
                   <FileText className="w-4 h-4" /> CSV (.csv)
                 </button>
-                <button onClick={handleExportExcel} className="flex items-center gap-2 px-4 py-3 text-left text-[0.65rem] text-ammare-dark/70 uppercase tracking-widest hover:bg-ammare-bg/80 transition-colors">
+                <button onClick={handleExportExcel} className="flex items-center gap-2 px-4 py-3 text-left text-[0.65rem] text-ammare-dark/70 uppercase tracking-widest hover:bg-ammare-bg/80 transition-colors cursor-pointer">
                   <FileSpreadsheet className="w-4 h-4" /> Excel (.xlsx)
+                </button>
+                <button onClick={handleExportPDF} className="flex items-center gap-2 px-4 py-3 text-left text-[0.65rem] text-ammare-dark/70 uppercase tracking-widest hover:bg-ammare-bg/80 transition-colors border-t border-ammare-light/10 cursor-pointer">
+                  <FileText className="w-4 h-4" /> Relatório PDF (.pdf)
                 </button>
               </div>
             </div>
@@ -742,6 +771,63 @@ export default function Admin() {
           </motion.div>
         </div>
       )}
-    </div>
+      </div>
+
+      {/* Print-Only Premium Catalog Document */}
+      <div className="hidden print-only p-12 text-black bg-white flex-col font-sans w-full">
+        <div className="flex justify-between items-center border-b border-zinc-300 pb-6 mb-8 w-full">
+          <div>
+            <h1 className="font-serif text-3xl tracking-wider text-zinc-900 uppercase">Ammare Clinique</h1>
+            <p className="text-[0.65rem] uppercase tracking-widest text-zinc-400 mt-1">Catálogo e Inventário Oficial de Estoque</p>
+          </div>
+          <div className="text-right">
+            <p className="text-xs text-zinc-500 font-light">Data de Emissão: {new Date().toLocaleDateString('pt-BR')}</p>
+            <p className="text-xs text-zinc-500 font-light">Tipo: {activeTab === 'kits' ? 'Kits Completos' : 'Produtos Individuais'}</p>
+          </div>
+        </div>
+
+        <table className="w-full text-left border-collapse">
+          <thead>
+            <tr className="border-b border-zinc-300 text-[0.65rem] uppercase tracking-widest text-zinc-500">
+              <th className="py-3 px-2 w-1/4">Nome</th>
+              <th className="py-3 px-2 w-1/4">Categoria</th>
+              <th className="py-3 px-2 w-2/5">Descrição / Detalhes</th>
+              <th className="py-3 px-2 w-1/12 text-right">Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {currentList.map((kit) => (
+              <tr key={`print-${kit.id}`} className="border-b border-zinc-100 text-xs">
+                <td className="py-4 px-2 font-serif text-sm font-semibold text-zinc-900">{kit.name || 'Sem nome'}</td>
+                <td className="py-4 px-2 text-zinc-500 tracking-wide uppercase text-[9px]">{kit.category}</td>
+                <td className="py-4 px-2 text-zinc-600 font-light leading-relaxed">
+                  <p className="mb-1">{kit.shortDescription}</p>
+                  {!kit.isIndividual ? (
+                    <ul className="list-disc list-inside space-y-0.5 text-zinc-500 text-[10px] mt-2">
+                      {kit.items && kit.items.map(item => (
+                        <li key={item.id}>{item.name}</li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <>
+                      {kit.sizes && kit.sizes.length > 0 && <p className="text-[9px] text-zinc-400">Tamanhos: {kit.sizes.join(', ')}</p>}
+                      {kit.colors && kit.colors.length > 0 && <p className="text-[9px] text-zinc-400">Cores: {kit.colors.join(', ')}</p>}
+                    </>
+                  )}
+                </td>
+                <td className="py-4 px-2 text-right text-zinc-800 font-medium">
+                  {kit.isActive !== false ? 'Ativo' : 'Inativo'}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+
+        <div className="mt-16 pt-8 border-t border-zinc-200 flex justify-between items-center text-[9px] text-zinc-400 uppercase tracking-widest">
+          <span>Ammare Clinique - Relatório de Inventário</span>
+          <span>Página 1 de 1</span>
+        </div>
+      </div>
+    </motion.div>
   );
 }

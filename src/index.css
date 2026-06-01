@@ -7,6 +7,7 @@
   --color-ammare-light: #CFCDC9;
   --color-ammare-black: #000000;
   --color-ammare-white: #FFFFFF;
+  --color-ammare-primary: #C4A47C;
 }
 
 html.dark {
@@ -15,6 +16,7 @@ html.dark {
   --color-ammare-light: #4A4844;
   --color-ammare-black: #FFFFFF;
   --color-ammare-white: #111111;
+  --color-ammare-primary: #E3C29B;
 }
 
 @theme {
@@ -23,6 +25,7 @@ html.dark {
   --color-ammare-light: var(--color-ammare-light);
   --color-ammare-black: var(--color-ammare-black);
   --color-ammare-white: var(--color-ammare-white);
+  --color-ammare-primary: var(--color-ammare-primary);
 
   --font-serif: "Playfair Display", serif;
   --font-sans: "Inter", sans-serif;
@@ -46,3 +49,64 @@ h1, h2, h3, h4, h5, h6 {
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+
+/* Glassmorphism utility */
+.ammare-glass {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.dark .ammare-glass {
+  background: rgba(26, 26, 24, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* Elegant Print Styles */
+@media print {
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+  
+  .no-print {
+    display: none !important;
+  }
+  
+  .print-only {
+    display: block !important;
+  }
+  
+  .print-page-break {
+    page-break-after: always;
+  }
+
+  /* Keep container neat */
+  .container {
+    max-width: 100% !important;
+    width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+}
+
+/* Custom premium horizontal scrollbar styling */
+.ammare-scrollbar::-webkit-scrollbar {
+  height: 4px;
+}
+.ammare-scrollbar::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.03);
+  border-radius: 2px;
+}
+.ammare-scrollbar::-webkit-scrollbar-thumb {
+  background: var(--color-ammare-primary);
+  border-radius: 2px;
+}
+.dark .ammare-scrollbar::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+

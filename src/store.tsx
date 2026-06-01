@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Kit, Product } from './types';
 import { initialKits, categories as initialCategories, initialProducts } from './data';
+import { supabase, isSupabaseConfigured } from './supabaseClient';
 
 interface AppContextType {
   kits: Kit[];
@@ -19,9 +20,68 @@ interface AppContextType {
   isGeneratingImage: boolean;
   addToCustomKit: (id: string) => void;
   removeFromCustomKit: (id: string) => void;
+  customKitTheme: string;
+  setCustomKitTheme: (theme: string) => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
+
+// Helper mapping functions to transition between frontend CamelCase and DB snake_case
+const mapKitToDB = (kit: Kit) => {
+  return {
+    id: kit.id,
+    name: kit.name,
+    short_description: kit.shortDescription,
+    full_description: kit.fullDescription,
+    items: kit.items,
+    image_url: kit.imageUrl,
+    gallery_urls: kit.galleryUrls || [],
+    category: kit.category,
+    price: kit.price || null,
+    sizes: kit.sizes || [],
+    colors: kit.colors || [],
+    observations: kit.observations || null,
+    is_active: kit.isActive !== false,
+    is_individual: kit.isIndividual === true
+  };
+};
+
+const mapDBToKit = (k: any): Kit => {
+  return {
+    id: k.id,
+    name: k.name,
+    shortDescription: k.short_description || '',
+    fullDescription: k.full_description || '',
+    items: Array.isArray(k.items) ? k.items : [],
+    imageUrl: k.image_url || '',
+    galleryUrls: Array.isArray(k.gallery_urls) ? k.gallery_urls : [],
+    category: k.category,
+    price: k.price ? Number(k.price) : undefined,
+    sizes: Array.isArray(k.sizes) ? k.sizes : [],
+    colors: Array.isArray(k.colors) ? k.colors : [],
+    observations: k.observations || undefined,
+    isActive: k.is_active !== false,
+    isIndividual: k.is_individual === true
+  };
+};
+
+const mapProductToDB = (p: Product) => {
+  return {
+    id: p.id,
+    name: p.name,
+    category: p.category,
+    image_url: p.imageUrl || null
+  };
+};
+
+const mapDBToProduct = (p: any): Product => {
+  return {
+    id: p.id,
+    name: p.name,
+    category: p.category,
+    imageUrl: p.image_url || undefined
+  };
+};
 
 export function AppProvider({ children }: { children: React.ReactNode }) {
   const [kits, setKits] = useState<Kit[]>(() => {
@@ -74,7 +134,107 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   
   const [customKitImage, setCustomKitImage] = useState<string | null>(null);
   const [isGeneratingImage, setIsGeneratingImage] = useState(false);
+  const [customKitTheme, setCustomKitTheme] = useState<string>('minimalist_white');
 
+  // Background sync from Supabase when component mounts
+  useEffect(() => {
+    async function loadData() {
+      if (!isSupabaseConfigured) return;
+
+      try {
+        // 1. Sync Categories
+        const { data: dbCategories, error: catError } = await supabase
+          .from('categories')
+          .select('name');
+        
+        if (catError) throw catError;
+
+        let finalCategories = categories;
+        if (!dbCategories || dbCategories.length === 0) {
+          // Seed DB with categories, excluding "Todos" which is UI-only
+          const seedCategories = initialCategories.filter(cat => cat !== 'Todos').map(cat => ({ name: cat }));
+          await supabase.from('categories').insert(seedCategories);
+          finalCategories = initialCategories;
+        } else {
+          finalCategories = ['Todos', ...dbCategories.map(c => c.name)];
+          
+          // Sync local-only categories to Supabase
+          const dbCatNames = new Set(dbCategories.map(c => c.name));
+          const localOnlyCats = categories.filter(c => c !== 'Todos' && !dbCatNames.has(c));
+          if (localOnlyCats.length > 0) {
+            await supabase.from('categories').insert(localOnlyCats.map(name => ({ name })));
+            finalCategories = [...finalCategories, ...localOnlyCats];
+          }
+        }
+        setCategories(finalCategories);
+
+        // 2. Sync Products
+        const { data: dbProducts, error: prodError } = await supabase
+          .from('products')
+          .select('*');
+
+        if (prodError) throw prodError;
+
+        let finalProducts = products;
+        if (!dbProducts || dbProducts.length === 0) {
+          // Seed DB
+          const seedProducts = initialProducts.map(p => ({
+            id: p.id,
+            name: p.name,
+            category: p.category
+          }));
+          await supabase.from('products').insert(seedProducts);
+          finalProducts = initialProducts;
+        } else {
+          finalProducts = dbProducts.map(mapDBToProduct);
+          
+          // Sync local-only products to Supabase
+          const dbProdIds = new Set(dbProducts.map(p => p.id));
+          const localOnlyProds = products.filter(p => !dbProdIds.has(p.id));
+          if (localOnlyProds.length > 0) {
+            await supabase.from('products').insert(localOnlyProds.map(mapProductToDB));
+            finalProducts = [...finalProducts, ...localOnlyProds];
+          }
+        }
+        setProducts(finalProducts);
+
+        // 3. Sync Kits
+        const { data: dbKits, error: kitsError } = await supabase
+          .from('kits')
+          .select('*');
+
+        if (kitsError) throw kitsError;
+
+        let finalKits = kits;
+        if (!dbKits || dbKits.length === 0) {
+          // Seed DB
+          const seedKits = initialKits.map(mapKitToDB);
+          await supabase.from('kits').insert(seedKits);
+          finalKits = initialKits;
+        } else {
+          finalKits = dbKits.map(mapDBToKit);
+          
+          // CRITICAL SYNC: Upload any local-only kits/products to Supabase!
+          const dbKitIds = new Set(dbKits.map(k => k.id));
+          const localOnlyKits = kits.filter(k => !dbKitIds.has(k.id));
+          
+          if (localOnlyKits.length > 0) {
+            const mappedLocalKits = localOnlyKits.map(mapKitToDB);
+            await supabase.from('kits').insert(mappedLocalKits);
+            finalKits = [...finalKits, ...localOnlyKits];
+          }
+        }
+        setKits(finalKits);
+
+      } catch (e) {
+        console.error("Erro ao sincronizar com o Supabase. Utilizando cache do LocalStorage:", e);
+      }
+    }
+
+    loadData();
+  }, []);
+
+  // Save changes locally as instant cache
   useEffect(() => {
     localStorage.setItem('ammare_kits', JSON.stringify(kits));
   }, [kits]);
@@ -86,6 +246,23 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     localStorage.setItem('ammare_products', JSON.stringify(products));
   }, [products]);
+
+  // Pre-load custom kit selection from shared URL if local storage is empty
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const itemsParam = params.get('items');
+    if (itemsParam && customKitSelectedIds.length === 0) {
+      const allowedIds = itemsParam.split('_');
+      // Pre-fill individual products that are recommended in the URL
+      const individualProductIds = kits
+        .filter(k => k.isIndividual && allowedIds.includes(k.id))
+        .map(k => k.id);
+        
+      if (individualProductIds.length > 0) {
+        setCustomKitSelectedIds(individualProductIds);
+      }
+    }
+  }, [kits, customKitSelectedIds]);
 
   useEffect(() => {
     localStorage.setItem('ammare_custom_kit', JSON.stringify(customKitSelectedIds));
@@ -100,16 +277,31 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     const timer = setTimeout(async () => {
       setIsGeneratingImage(true);
       try {
-        const selectedNames = customKitSelectedIds
-          .map(id => kits.find(k => k.id === id)?.name)
-          .filter(Boolean);
+        const selectedProducts = customKitSelectedIds
+          .map(id => kits.find(k => k.id === id))
+          .filter(Boolean)
+          .filter(k => k.isIndividual === true);
           
-        const prompt = `A highly professional studio photography image of a beautiful luxury gift box kit. Inside this elegant open box or arrangement, there is a set of premium cosmetics and products: ${selectedNames.join(', ')}. Emphasize that this is a single cohesive kit bundle. Minimal aesthetic, premium clinic vibe, soft shadows, 8k resolution.`;
+        const selectedNames = selectedProducts.map(k => k.name);
+        const selectedImages = selectedProducts.map(k => k.imageUrl).filter(Boolean);
+          
+        let themeDetails = '';
+        if (customKitTheme === 'minimalist_white') {
+          themeDetails = 'The background should be an ultra-minimalist, clean matte white surface with soft, diffused natural window light and subtle shadows.';
+        } else if (customKitTheme === 'luxury_dark' || customKitTheme === 'black_gold') {
+          themeDetails = 'The background should be a dramatic dark slate or black marble surface with sophisticated spotlight lighting, gold metallic highlights, and a luxury clinic vibe.';
+        } else if (customKitTheme === 'botanical_rose' || customKitTheme === 'rose_gold_blossom') {
+          themeDetails = 'The background should be a soft pink clay surface with delicate shadows of organic leaves and modern botanical elements in the scene.';
+        } else {
+          themeDetails = 'The products should be placed on warm sand or organic stone textures, under warm, soft sunlight with a serene wellness aesthetic.';
+        }
+          
+        const prompt = `A highly professional studio product photography of the cosmetic items shown in the attached reference images: ${selectedNames.join(', ')}. Arrange these specific products beautifully side-by-side as a single cohesive set on a flat surface, not in a box. They must look visually identical to the products shown in the reference images (same shapes, same colors, same bottle/jar packaging, same style). Minimalist aesthetic, premium spa and clinic vibe, soft shadows, 8k resolution. ${themeDetails}`;
         
         const response = await fetch('/api/generate-kit', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ prompt })
+          body: JSON.stringify({ prompt, images: selectedImages })
         });
         
         if (response.ok) {
@@ -124,48 +316,107 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }, 2500); // 2.5s debounce to avoid generating on every single click
     
     return () => clearTimeout(timer);
-  }, [customKitSelectedIds, kits]);
+  }, [customKitSelectedIds, customKitTheme, kits]);
 
   const addToCustomKit = (id: string) => {
-    setCustomKitSelectedIds(prev => prev.includes(id) ? prev : [...prev, id]);
+    const item = kits.find(k => k.id === id);
+    if (item && item.isIndividual) {
+      setCustomKitSelectedIds(prev => prev.includes(id) ? prev : [...prev, id]);
+    }
   };
 
   const removeFromCustomKit = (id: string) => {
     setCustomKitSelectedIds(prev => prev.filter(itemId => itemId !== id));
   };
 
-  const addKit = (kit: Kit) => {
+  const addKit = async (kit: Kit) => {
     setKits(prev => [...prev, kit]);
-  };
-
-  const updateKit = (id: string, updatedKit: Kit) => {
-    setKits(prev => prev.map(k => k.id === id ? updatedKit : k));
-  };
-
-  const removeKit = (id: string) => {
-    setKits(prev => prev.filter(k => k.id !== id));
-  };
-
-  const addCategory = (category: string) => {
-    if (!categories.includes(category)) {
-      setCategories(prev => [...prev, category]);
+    if (isSupabaseConfigured) {
+      try {
+        await supabase.from('kits').insert(mapKitToDB(kit));
+      } catch (e) {
+        console.error("Erro ao inserir kit no Supabase:", e);
+      }
     }
   };
 
-  const removeCategory = (category: string) => {
+  const updateKit = async (id: string, updatedKit: Kit) => {
+    setKits(prev => prev.map(k => k.id === id ? updatedKit : k));
+    if (isSupabaseConfigured) {
+      try {
+        await supabase.from('kits').update(mapKitToDB(updatedKit)).eq('id', id);
+      } catch (e) {
+        console.error("Erro ao atualizar kit no Supabase:", e);
+      }
+    }
+  };
+
+  const removeKit = async (id: string) => {
+    setKits(prev => prev.filter(k => k.id !== id));
+    if (isSupabaseConfigured) {
+      try {
+        await supabase.from('kits').delete().eq('id', id);
+      } catch (e) {
+        console.error("Erro ao deletar kit no Supabase:", e);
+      }
+    }
+  };
+
+  const addCategory = async (category: string) => {
+    if (!categories.includes(category)) {
+      setCategories(prev => [...prev, category]);
+      if (isSupabaseConfigured) {
+        try {
+          await supabase.from('categories').insert({ name: category });
+        } catch (e) {
+          console.error("Erro ao inserir categoria no Supabase:", e);
+        }
+      }
+    }
+  };
+
+  const removeCategory = async (category: string) => {
     setCategories(prev => prev.filter(c => c !== category));
+    if (isSupabaseConfigured) {
+      try {
+        await supabase.from('categories').delete().eq('name', category);
+      } catch (e) {
+        console.error("Erro ao deletar categoria no Supabase:", e);
+      }
+    }
   };
 
-  const addProduct = (product: Product) => {
+  const addProduct = async (product: Product) => {
     setProducts(prev => [...prev, product]);
+    if (isSupabaseConfigured) {
+      try {
+        await supabase.from('products').insert(mapProductToDB(product));
+      } catch (e) {
+        console.error("Erro ao inserir produto no Supabase:", e);
+      }
+    }
   };
 
-  const updateProduct = (id: string, updatedProduct: Product) => {
+  const updateProduct = async (id: string, updatedProduct: Product) => {
     setProducts(prev => prev.map(p => p.id === id ? updatedProduct : p));
+    if (isSupabaseConfigured) {
+      try {
+        await supabase.from('products').update(mapProductToDB(updatedProduct)).eq('id', id);
+      } catch (e) {
+        console.error("Erro ao atualizar produto no Supabase:", e);
+      }
+    }
   };
 
-  const removeProduct = (id: string) => {
+  const removeProduct = async (id: string) => {
     setProducts(prev => prev.filter(p => p.id !== id));
+    if (isSupabaseConfigured) {
+      try {
+        await supabase.from('products').delete().eq('id', id);
+      } catch (e) {
+        console.error("Erro ao deletar produto no Supabase:", e);
+      }
+    }
   };
 
   return (
@@ -175,7 +426,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       addCategory, removeCategory,
       addProduct, updateProduct, removeProduct,
       customKitSelectedIds, customKitImage, isGeneratingImage,
-      addToCustomKit, removeFromCustomKit
+      addToCustomKit, removeFromCustomKit,
+      customKitTheme, setCustomKitTheme
     }}>
       {children}
     </AppContext.Provider>
@@ -189,3 +441,4 @@ export function useAppContext() {
   }
   return context;
 }
+

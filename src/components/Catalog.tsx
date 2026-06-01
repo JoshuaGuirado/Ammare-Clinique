@@ -12,6 +12,7 @@ export default function Catalog() {
   const [searchParams] = useSearchParams();
 
   const isExclusive = searchParams.has('items') || searchParams.get('theme') === 'exclusive';
+  const showCurated = isExclusive && searchParams.get('view') !== 'all';
 
   const filteredKits = useMemo(() => {
     const itemsParam = searchParams.get('items');
@@ -36,7 +37,7 @@ export default function Catalog() {
     }
     
     return allKits.filter(kit => {
-      if (allowedIds) {
+      if (allowedIds && showCurated) {
         return allowedIds.includes(kit.id) && kit.isActive !== false;
       }
       
@@ -50,26 +51,26 @@ export default function Catalog() {
         
       return matchesCategory && isActive && matchesSearch;
     });
-  }, [kits, activeCategory, searchQuery, searchParams]);
+  }, [kits, activeCategory, searchQuery, searchParams, showCurated]);
 
   return (
-    <section id="catalogo" className={`py-24 flex-grow transition-colors duration-700 ${isExclusive ? 'bg-ammare-dark text-ammare-white' : 'bg-ammare-bg text-ammare-dark'}`}>
+    <section id="catalogo" className={`py-24 flex-grow transition-colors duration-700 ${showCurated ? 'bg-ammare-dark text-ammare-white' : 'bg-ammare-bg text-ammare-dark'}`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Header & Categories */}
         <div className="flex flex-col mb-16 gap-8">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
             <div>
-              <h2 className={`font-serif text-3xl md:text-4xl mb-4 ${isExclusive ? 'text-ammare-white' : 'text-ammare-dark'}`}>
-                {isExclusive ? 'Sua Recomendação Exclusiva' : 'Coleção de Kits'}
+              <h2 className={`font-serif text-3xl md:text-4xl mb-4 ${showCurated ? 'text-ammare-white' : 'text-ammare-dark'}`}>
+                {showCurated ? 'Sua Recomendação Exclusiva' : 'Coleção de Kits'}
               </h2>
-              <p className={`font-sans text-sm font-light max-w-md ${isExclusive ? 'text-ammare-light' : 'text-ammare-dark/50'}`}>
-                {isExclusive ? 'Selecionamos estes itens com cuidado, pensando especificamente na excelência de seus resultados e recuperação.' : 'Explore nossa seleção de produtos desenhados para uma recuperação tranquila e resultados excelentes.'}
+              <p className={`font-sans text-sm font-light max-w-md ${showCurated ? 'text-ammare-light' : 'text-ammare-dark/50'}`}>
+                {showCurated ? 'Selecionamos estes itens com cuidado, pensando especificamente na excelência de seus resultados e recuperação.' : 'Explore nossa seleção de produtos desenhados para uma recuperação tranquila e resultados excelentes.'}
               </p>
             </div>
           </div>
 
-          {!isExclusive && (
+          {!showCurated && (
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-ammare-dark/5 pb-2">
               <div className="flex overflow-x-auto no-scrollbar gap-6 md:gap-8 pb-1 border-b border-transparent">
                 {categories.map((cat, i) => (
@@ -121,7 +122,7 @@ export default function Catalog() {
                 exit={{ opacity: 0, y: 20, scale: 0.98 }}
                 transition={{ duration: 0.4, delay: Math.min(index * 0.05, 0.3), ease: 'easeOut' }}
               >
-                <KitCard kit={kit} isExclusive={isExclusive} />
+                <KitCard kit={kit} isExclusive={showCurated} />
               </motion.div>
             ))}
           </AnimatePresence>

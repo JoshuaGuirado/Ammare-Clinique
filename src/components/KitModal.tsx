@@ -18,7 +18,7 @@ export default function KitModal({ kit, onClose }: KitModalProps) {
 
   const handleWhatsApp = () => {
     const text = encodeURIComponent(`Olá! Gostaria de conhecer melhor o ${kit.name}.`);
-    window.open(`https://wa.me/5511999999999?text=${text}`, '_blank');
+    window.open(`https://wa.me/5544999665711?text=${text}`, '_blank');
   };
 
   const handleDownloadImage = async () => {

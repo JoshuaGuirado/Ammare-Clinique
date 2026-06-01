@@ -48,22 +48,24 @@ export default function KitCard({ kit, isExclusive = false }: KitCardProps) {
                <div className="w-4 sm:w-6 group-hover:w-8 sm:group-hover:w-10 h-[1px] bg-current transition-all duration-500 ease-out" />
             </div>
             
-            <button
-              onClick={(e) => {
-                e.stopPropagation(); // prevent modal opening
-                addToCustomKit(kit.id);
-              }}
-              className={`flex items-center space-x-1.5 px-3 py-1.5 border rounded-sm text-[0.6rem] uppercase tracking-widest font-medium transition-all duration-300
-                ${customKitSelectedIds.includes(kit.id)
-                  ? 'border-transparent bg-ammare-dark text-ammare-white'
-                  : isExclusive
-                    ? 'border-ammare-white/20 text-ammare-white hover:bg-ammare-white hover:text-ammare-dark'
-                    : 'border-ammare-dark/20 text-ammare-dark hover:bg-ammare-dark hover:text-ammare-white'
-                }
-              `}
-            >
-              <span>{customKitSelectedIds.includes(kit.id) ? 'Adicionado' : 'Adicionar ao Kit'}</span>
-            </button>
+            {kit.isIndividual && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation(); // prevent modal opening
+                  addToCustomKit(kit.id);
+                }}
+                className={`flex items-center space-x-1.5 px-3 py-1.5 border rounded-sm text-[0.6rem] uppercase tracking-widest font-medium transition-all duration-300
+                  ${customKitSelectedIds.includes(kit.id)
+                    ? 'border-transparent bg-ammare-dark text-ammare-white'
+                    : isExclusive
+                      ? 'border-ammare-white/20 text-ammare-white hover:bg-ammare-white hover:text-ammare-dark'
+                      : 'border-ammare-dark/20 text-ammare-dark hover:bg-ammare-dark hover:text-ammare-white'
+                  }
+                `}
+              >
+                <span>{customKitSelectedIds.includes(kit.id) ? 'Adicionado' : 'Adicionar ao Kit'}</span>
+              </button>
+            )}
           </div>
         </div>
       </div>
