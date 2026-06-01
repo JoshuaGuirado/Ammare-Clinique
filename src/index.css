@@ -109,4 +109,143 @@ h1, h2, h3, h4, h5, h6 {
   background: rgba(255, 255, 255, 0.02);
 }
 
+/* ==========================================================================
+   Efeitos Visuais de Fundo Premium e Luxo (Spotlights, Partículas e Raios)
+   ========================================================================== */
+
+@keyframes luxury-pulse-1 {
+  0%, 100% {
+    transform: translate(0px, 0px) scale(1) rotate(0deg);
+    opacity: 0.12;
+  }
+  33% {
+    transform: translate(50px, -80px) scale(1.2) rotate(120deg);
+    opacity: 0.18;
+  }
+  66% {
+    transform: translate(-40px, 40px) scale(0.85) rotate(240deg);
+    opacity: 0.08;
+  }
+}
+
+@keyframes luxury-pulse-2 {
+  0%, 100% {
+    transform: translate(0px, 0px) scale(1.1) rotate(0deg);
+    opacity: 0.07;
+  }
+  50% {
+    transform: translate(-60px, 50px) scale(0.9) rotate(-180deg);
+    opacity: 0.15;
+  }
+}
+
+@keyframes luxury-ray-move-1 {
+  0% {
+    transform: rotate(-35deg) translate(-10%, -10%);
+    opacity: 0.04;
+  }
+  50% {
+    transform: rotate(-25deg) translate(5%, 5%);
+    opacity: 0.15;
+  }
+  100% {
+    transform: rotate(-35deg) translate(-10%, -10%);
+    opacity: 0.04;
+  }
+}
+
+@keyframes luxury-ray-move-2 {
+  0% {
+    transform: rotate(45deg) translate(-5%, 5%);
+    opacity: 0.02;
+  }
+  50% {
+    transform: rotate(35deg) translate(10%, -5%);
+    opacity: 0.10;
+  }
+  100% {
+    transform: rotate(45deg) translate(-5%, 5%);
+    opacity: 0.02;
+  }
+}
+
+@keyframes float-dust {
+  0% {
+    transform: translateY(105vh) translateX(0px) scale(0.5);
+    opacity: 0;
+  }
+  15% {
+    opacity: 0.6;
+  }
+  85% {
+    opacity: 0.6;
+  }
+  100% {
+    transform: translateY(-10vh) translateX(100px) scale(1.5);
+    opacity: 0;
+  }
+}
+
+.luxury-glow-orb-1 {
+  filter: blur(140px);
+  mix-blend-mode: plus-lighter;
+  animation: luxury-pulse-1 30s infinite ease-in-out;
+}
+
+.luxury-glow-orb-2 {
+  filter: blur(120px);
+  mix-blend-mode: plus-lighter;
+  animation: luxury-pulse-2 25s infinite ease-in-out;
+}
+
+.luxury-light-ray-1 {
+  background: linear-gradient(90deg, transparent 0%, rgba(196, 164, 124, 0.18) 50%, transparent 100%);
+  filter: blur(50px);
+  transform-origin: top left;
+  animation: luxury-ray-move-1 25s infinite ease-in-out;
+}
+
+.luxury-light-ray-2 {
+  background: linear-gradient(90deg, transparent 0%, rgba(196, 164, 124, 0.12) 50%, transparent 100%);
+  filter: blur(60px);
+  transform-origin: bottom right;
+  animation: luxury-ray-move-2 28s infinite ease-in-out;
+}
+
+.luxury-dust-particle {
+  position: absolute;
+  background: radial-gradient(circle, rgba(196, 164, 124, 0.75) 0%, transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
+  animation: float-dust 20s infinite linear;
+}
+
+/* Premium Card Spotlight Effect */
+.luxury-card-glow {
+  position: relative;
+  transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.luxury-card-glow::after {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  background: linear-gradient(135deg, rgba(196, 164, 124, 0.4), transparent, rgba(196, 164, 124, 0.1));
+  border-radius: inherit;
+  z-index: -1;
+  opacity: 0;
+  transition: opacity 0.5s ease;
+}
+
+.luxury-card-glow:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.3), 0 0 30px -5px rgba(196, 164, 124, 0.15);
+  border-color: rgba(196, 164, 124, 0.3) !important;
+}
+
+.luxury-card-glow:hover::after {
+  opacity: 1;
+}
+
+
 

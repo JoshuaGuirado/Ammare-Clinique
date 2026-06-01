@@ -2,10 +2,11 @@ import Header from '../components/Header';
 import Hero from '../components/Hero';
 import Catalog from '../components/Catalog';
 import WhatsAppButton from '../components/WhatsAppButton';
-import { Aperture, Sparkles } from 'lucide-react';
+import { Aperture, Sparkles, Instagram } from 'lucide-react';
 import { useSearchParams } from 'react-router-dom';
 import { useEffect } from 'react';
 import { motion } from 'motion/react';
+import LuxuryBackground from '../components/LuxuryBackground';
 
 export default function Home() {
   const [searchParams] = useSearchParams();
@@ -29,8 +30,9 @@ export default function Home() {
       initial={{ opacity: 0, y: 15 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-      className={`min-h-screen flex flex-col ${showCurated ? 'bg-ammare-dark' : 'bg-ammare-bg'}`}
+      className={`min-h-screen flex flex-col relative overflow-hidden ${showCurated ? 'bg-ammare-dark' : 'bg-ammare-bg'}`}
     >
+      {showCurated && <LuxuryBackground />}
       <Header />
       {showCurated ? (
         <div className="pt-32 pb-10 text-center px-4 bg-ammare-dark max-w-4xl mx-auto no-print">
@@ -78,9 +80,18 @@ export default function Home() {
           <h2 className="font-serif text-2xl tracking-[0.15em] text-ammare-white/90 uppercase mb-3">
             Ammare
           </h2>
-          <span className="font-sans text-[0.6rem] tracking-[0.4em] uppercase text-ammare-white/40 mb-16 font-light">
+          <span className="font-sans text-[0.6rem] tracking-[0.4em] uppercase text-ammare-white/40 mb-4 font-light">
             Clinique
           </span>
+          <a
+            href="https://www.instagram.com/ammareclinique/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center space-x-2 text-ammare-white/40 hover:text-ammare-primary transition-colors duration-300 mb-16 group cursor-pointer"
+          >
+            <Instagram size={14} className="group-hover:scale-110 transition-transform" />
+            <span className="text-[0.55rem] tracking-[0.2em] uppercase font-light">@ammareclinique</span>
+          </a>
           <p className="text-[0.65rem] text-ammare-white/30 font-light text-center tracking-widest uppercase">
             &copy; {new Date().getFullYear()} Ammare. Reservados todos os direitos.
           </p>

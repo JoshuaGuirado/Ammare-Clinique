@@ -16,7 +16,12 @@ export default function KitCard({ kit, isExclusive = false }: KitCardProps) {
   return (
     <>
       <div
-        className="group flex flex-col cursor-pointer h-full"
+        className={`group flex flex-col cursor-pointer h-full luxury-card-glow p-5 rounded-sm border transition-all duration-500
+          ${isExclusive 
+            ? 'bg-ammare-white/[0.03] border-ammare-white/[0.08]' 
+            : 'bg-ammare-white/50 border-ammare-dark/5 shadow-[0_4px_20px_-10px_rgba(0,0,0,0.05)]'
+          }
+        `}
         onClick={() => setIsModalOpen(true)}
       >
         <div className={`relative aspect-[3/4] overflow-hidden mb-6 w-full ${isExclusive ? 'bg-ammare-white/5' : 'bg-ammare-light/10'}`}>

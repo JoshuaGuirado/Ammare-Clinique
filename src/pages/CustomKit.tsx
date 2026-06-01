@@ -4,6 +4,7 @@ import { Sparkles, Trash2, ArrowRight, Loader2, MessageCircle, Download, Gift, P
 import { useAppContext } from '../store';
 import Header from '../components/Header';
 import { Link } from 'react-router-dom';
+import LuxuryBackground from '../components/LuxuryBackground';
 
 const THEMES = [
   { id: 'minimalist_white', name: 'Minimalist White', color: 'bg-white', border: 'border-zinc-300', text: 'text-zinc-700', desc: 'Fundo branco limpo minimalista com iluminação natural suave.' },
@@ -85,8 +86,9 @@ export default function CustomKit() {
       initial={{ opacity: 0, y: 15 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-      className="min-h-screen bg-ammare-bg transition-colors duration-700"
+      className="min-h-screen bg-ammare-bg transition-colors duration-700 relative overflow-hidden"
     >
+      <LuxuryBackground />
       <Header />
       <div className="pt-32 pb-24">
         <div className="container mx-auto px-6 max-w-6xl">
