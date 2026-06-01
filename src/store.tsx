@@ -328,10 +328,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const addKit = async (kit: Kit) => {
     setKits(prev => [...prev, kit]);
     if (isSupabaseConfigured) {
-      try {
-        await supabase.from('kits').insert(mapKitToDB(kit));
-      } catch (e) {
-        console.error("Erro ao inserir kit no Supabase:", e);
+      const { error } = await supabase.from('kits').insert(mapKitToDB(kit));
+      if (error) {
+        console.error("Erro ao inserir kit no Supabase:", error);
       }
     }
   };
@@ -339,10 +338,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const updateKit = async (id: string, updatedKit: Kit) => {
     setKits(prev => prev.map(k => k.id === id ? updatedKit : k));
     if (isSupabaseConfigured) {
-      try {
-        await supabase.from('kits').update(mapKitToDB(updatedKit)).eq('id', id);
-      } catch (e) {
-        console.error("Erro ao atualizar kit no Supabase:", e);
+      const { error } = await supabase.from('kits').update(mapKitToDB(updatedKit)).eq('id', id);
+      if (error) {
+        console.error("Erro ao atualizar kit no Supabase:", error);
       }
     }
   };
@@ -350,10 +348,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const removeKit = async (id: string) => {
     setKits(prev => prev.filter(k => k.id !== id));
     if (isSupabaseConfigured) {
-      try {
-        await supabase.from('kits').delete().eq('id', id);
-      } catch (e) {
-        console.error("Erro ao deletar kit no Supabase:", e);
+      const { error } = await supabase.from('kits').delete().eq('id', id);
+      if (error) {
+        console.error("Erro ao deletar kit no Supabase:", error);
       }
     }
   };
@@ -362,10 +359,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     if (!categories.includes(category)) {
       setCategories(prev => [...prev, category]);
       if (isSupabaseConfigured) {
-        try {
-          await supabase.from('categories').insert({ name: category });
-        } catch (e) {
-          console.error("Erro ao inserir categoria no Supabase:", e);
+        const { error } = await supabase.from('categories').insert({ name: category });
+        if (error) {
+          console.error("Erro ao inserir categoria no Supabase:", error);
         }
       }
     }
@@ -374,10 +370,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const removeCategory = async (category: string) => {
     setCategories(prev => prev.filter(c => c !== category));
     if (isSupabaseConfigured) {
-      try {
-        await supabase.from('categories').delete().eq('name', category);
-      } catch (e) {
-        console.error("Erro ao deletar categoria no Supabase:", e);
+      const { error } = await supabase.from('categories').delete().eq('name', category);
+      if (error) {
+        console.error("Erro ao deletar categoria no Supabase:", error);
       }
     }
   };
@@ -385,10 +380,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const addProduct = async (product: Product) => {
     setProducts(prev => [...prev, product]);
     if (isSupabaseConfigured) {
-      try {
-        await supabase.from('products').insert(mapProductToDB(product));
-      } catch (e) {
-        console.error("Erro ao inserir produto no Supabase:", e);
+      const { error } = await supabase.from('products').insert(mapProductToDB(product));
+      if (error) {
+        console.error("Erro ao inserir produto no Supabase:", error);
       }
     }
   };
@@ -396,10 +390,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const updateProduct = async (id: string, updatedProduct: Product) => {
     setProducts(prev => prev.map(p => p.id === id ? updatedProduct : p));
     if (isSupabaseConfigured) {
-      try {
-        await supabase.from('products').update(mapProductToDB(updatedProduct)).eq('id', id);
-      } catch (e) {
-        console.error("Erro ao atualizar produto no Supabase:", e);
+      const { error } = await supabase.from('products').update(mapProductToDB(updatedProduct)).eq('id', id);
+      if (error) {
+        console.error("Erro ao atualizar produto no Supabase:", error);
       }
     }
   };
@@ -407,10 +400,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const removeProduct = async (id: string) => {
     setProducts(prev => prev.filter(p => p.id !== id));
     if (isSupabaseConfigured) {
-      try {
-        await supabase.from('products').delete().eq('id', id);
-      } catch (e) {
-        console.error("Erro ao deletar produto no Supabase:", e);
+      const { error } = await supabase.from('products').delete().eq('id', id);
+      if (error) {
+        console.error("Erro ao deletar produto no Supabase:", error);
       }
     }
   };
