@@ -243,6 +243,20 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem('ammare_products', JSON.stringify(products));
   }, [products]);
 
+  // Sanitização Defensiva: Remove qualquer kit completo ou item que não seja produto individual da seleção
+  useEffect(() => {
+    if (kits.length > 0 && customKitSelectedIds.length > 0) {
+      const sanitized = customKitSelectedIds.filter(id => {
+        const item = kits.find(k => k.id === id);
+        return item && item.isIndividual === true;
+      });
+      
+      if (sanitized.length !== customKitSelectedIds.length) {
+        setCustomKitSelectedIds(sanitized);
+      }
+    }
+  }, [kits, customKitSelectedIds]);
+
 
 
   useEffect(() => {
