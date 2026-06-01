@@ -35,7 +35,7 @@ export default function Home() {
       {showCurated && <LuxuryBackground />}
       <Header />
       {showCurated ? (
-        <div className="pt-32 pb-10 text-center px-4 bg-ammare-dark max-w-4xl mx-auto no-print">
+        <div className="pt-32 pb-10 text-center px-4 bg-transparent max-w-4xl mx-auto no-print relative z-10">
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -70,7 +70,7 @@ export default function Home() {
         <Hero />
       )}
       
-      <main className={`flex-grow flex flex-col ${showCurated ? 'bg-ammare-dark' : 'bg-ammare-bg'}`}>
+      <main className="flex-grow flex flex-col bg-transparent relative z-10">
         <Catalog />
       </main>
       

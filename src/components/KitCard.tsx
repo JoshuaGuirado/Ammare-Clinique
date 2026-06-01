@@ -3,6 +3,7 @@ import { Kit } from '../types';
 import { useState } from 'react';
 import KitModal from './KitModal';
 import { useAppContext } from '../store';
+import { Sparkles } from 'lucide-react';
 
 interface KitCardProps {
   kit: Kit;
@@ -25,6 +26,12 @@ export default function KitCard({ kit, isExclusive = false }: KitCardProps) {
         onClick={() => setIsModalOpen(true)}
       >
         <div className={`relative aspect-[3/4] overflow-hidden mb-6 w-full ${isExclusive ? 'bg-ammare-white/5' : 'bg-ammare-light/10'}`}>
+          {isExclusive && (
+            <div className="absolute top-3 left-3 bg-ammare-primary text-black font-sans text-[0.48rem] font-semibold uppercase tracking-[0.2em] px-2.5 py-1 rounded-sm shadow-lg flex items-center gap-1 z-10 animate-pulse" style={{ animationDuration: '4s' }}>
+              <Sparkles size={8} className="text-black" />
+              <span>Indicado por Mari</span>
+            </div>
+          )}
           <img 
             src={kit.imageUrl || undefined} 
             alt={kit.name}

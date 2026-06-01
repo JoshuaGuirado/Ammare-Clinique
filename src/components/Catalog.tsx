@@ -54,7 +54,7 @@ export default function Catalog() {
   }, [kits, activeCategory, searchQuery, searchParams, showCurated]);
 
   return (
-    <section id="catalogo" className={`py-24 flex-grow transition-colors duration-700 ${showCurated ? 'bg-ammare-dark text-ammare-white' : 'bg-ammare-bg text-ammare-dark'}`}>
+    <section id="catalogo" className={`py-24 flex-grow transition-colors duration-700 relative z-10 ${showCurated ? 'bg-transparent text-ammare-white' : 'bg-ammare-bg text-ammare-dark'}`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Header & Categories */}
