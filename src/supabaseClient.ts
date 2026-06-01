@@ -24,18 +24,24 @@ if (supabaseUrl.endsWith('/rest/v1/')) {
 
 export const isSupabaseConfigured = Boolean(supabaseUrl && supabaseAnonKey);
 
+// Log de depuração profissional para o console do navegador do cliente
+console.log("[Ammare Supabase Debug]", {
+  url: supabaseUrl || "VAZIO/UNDEFINED",
+  keyMasked: supabaseAnonKey ? `${supabaseAnonKey.substring(0, 14)}...` : "VAZIO/UNDEFINED",
+  isConfigured: isSupabaseConfigured
+});
+
 if (!isSupabaseConfigured) {
   console.warn(
     "⚠️ Supabase URL ou Anon Key não configurados no arquivo .env.local!\n" +
     "O aplicativo funcionará no modo de demonstração usando LocalStorage."
   );
 } else {
-  // Alerta de formato de chave: Chaves do Supabase reais são JWTs longos começando com "eyJ"
-  if (!supabaseAnonKey.startsWith('eyJ')) {
+  // Alerta de formato de chave desativado para aceitar chaves com formato sb_
+  if (!supabaseAnonKey.startsWith('eyJ') && !supabaseAnonKey.startsWith('sb_')) {
     console.error(
       "❌ ERRO DE CONFIGURAÇÃO DO SUPABASE:\n" +
       "A chave configurada (" + supabaseAnonKey.substring(0, 10) + "...) NÃO parece ser uma chave válida do Supabase!\n" +
-      "As chaves corretas do Supabase são tokens JWT extremamente longos que começam obrigatoriamente com 'eyJ'.\n" +
       "Por favor, verifique suas chaves em Project Settings -> API no painel do Supabase."
     );
   }
