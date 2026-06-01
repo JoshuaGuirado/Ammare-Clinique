@@ -74,25 +74,26 @@ export default function Home() {
         <Catalog />
       </main>
       
-      <footer className="bg-ammare-dark dark:bg-ammare-bg py-24 pb-12 relative z-10 border-t border-ammare-white/[0.04]">
+      <footer className="py-24 pb-12 relative z-10 border-t border-white/[0.06]" style={{ backgroundColor: '#1C1C1A' }}>
         <div className="max-w-7xl mx-auto px-4 flex flex-col items-center">
-          <Aperture className="w-8 h-8 text-ammare-white/[0.15] mb-6" strokeWidth={1} />
-          <h2 className="font-serif text-2xl tracking-[0.15em] text-ammare-white/90 uppercase mb-3">
+          <Aperture className="w-8 h-8 mb-6" strokeWidth={1} style={{ color: 'rgba(255,255,255,0.12)' }} />
+          <h2 className="font-serif text-2xl tracking-[0.15em] uppercase mb-3" style={{ color: 'rgba(255,255,255,0.88)' }}>
             Ammare
           </h2>
-          <span className="font-sans text-[0.6rem] tracking-[0.4em] uppercase text-ammare-white/40 mb-4 font-light">
+          <span className="font-sans text-[0.6rem] tracking-[0.4em] uppercase mb-4 font-light" style={{ color: 'rgba(255,255,255,0.35)' }}>
             Clinique
           </span>
           <a
             href="https://www.instagram.com/ammareclinique/"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center space-x-2 text-ammare-white/40 hover:text-ammare-primary transition-colors duration-300 mb-16 group cursor-pointer"
+            className="inline-flex items-center space-x-2 transition-colors duration-300 mb-16 group cursor-pointer hover:text-ammare-primary"
+            style={{ color: 'rgba(255,255,255,0.35)' }}
           >
             <Instagram size={14} className="group-hover:scale-110 transition-transform" />
             <span className="text-[0.55rem] tracking-[0.2em] uppercase font-light">@ammareclinique</span>
           </a>
-          <p className="text-[0.65rem] text-ammare-white/30 font-light text-center tracking-widest uppercase">
+          <p className="text-[0.65rem] font-light text-center tracking-widest uppercase" style={{ color: 'rgba(255,255,255,0.25)' }}>
             &copy; {new Date().getFullYear()} Ammare. Reservados todos os direitos.
           </p>
         </div>
