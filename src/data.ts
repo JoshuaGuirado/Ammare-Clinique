@@ -38,6 +38,15 @@ export const initialKits: Kit[] = [
   }
 ];
 
+export const initialProducts = [
+  { id: 'p1', name: 'Shampoo da Johnson', category: 'Cabelos' },
+  { id: 'p2', name: 'Maquiagem (Paleta)', category: 'Facial' },
+  { id: 'p3', name: 'Batom da Mary Kay', category: 'Facial' },
+  { id: 'p4', name: 'Tiara da Dior', category: 'Acessórios' },
+  { id: 'p5', name: 'Cinta Modeladora de Alta Compressão', category: 'Lipoaspiração' },
+  { id: 'p6', name: 'Espuma Protetora de Pele', category: 'Lipoaspiração' }
+];
+
 export const categories = [
   'Todos',
   'Lipoaspiração e Abdominoplastia',

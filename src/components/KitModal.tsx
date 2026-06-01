@@ -71,7 +71,7 @@ export default function KitModal({ kit, onClose }: KitModalProps) {
           <div className="relative w-full md:w-[45%] h-[40vh] md:h-full bg-ammare-light/10 shrink-0 group flex flex-col overflow-y-auto no-scrollbar">
               {kit.imageUrl ? (
                 <img 
-                  src={kit.imageUrl} 
+                  src={kit.imageUrl || undefined} 
                   alt={kit.name}
                   className="w-full h-full object-cover"
                 />
@@ -83,7 +83,7 @@ export default function KitModal({ kit, onClose }: KitModalProps) {
               {kit.galleryUrls?.map((url, i) => (
                 <img 
                   key={`gallery-${i}`}
-                  src={url} 
+                  src={url || undefined} 
                   alt={`${kit.name} galeria ${i + 1}`}
                   className="w-full h-full object-cover"
                 />

@@ -4,12 +4,12 @@ import { Kit } from '../types';
 import Header from '../components/Header';
 import { Pencil, Trash2, Plus, Save, X, LogIn, Download, FileSpreadsheet, FileText, Share2, CheckSquare, Square } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { categories } from '../data';
+import { categories, initialKits } from '../data';
 import { List } from 'react-window';
 import * as XLSX from 'xlsx';
 
 export default function Admin() {
-  const { kits, categories, updateKit, removeKit, addKit, addCategory, removeCategory } = useAppContext();
+  const { kits, categories, updateKit, removeKit, addKit, addCategory, removeCategory, products, updateProduct, removeProduct, addProduct } = useAppContext();
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
     return localStorage.getItem('ammare_admin_auth') === 'true';
   });
@@ -77,6 +77,18 @@ export default function Admin() {
     url.search = '';
     url.searchParams.set('items', selectedItems.join('_'));
     url.searchParams.set('theme', 'exclusive');
+    
+    const initialKitIds = new Set(initialKits.map(k => k.id));
+    const customSelectedKits = kits.filter(k => selectedItems.includes(k.id) && !initialKitIds.has(k.id));
+    if (customSelectedKits.length > 0) {
+      try {
+        const encoded = btoa(encodeURIComponent(JSON.stringify(customSelectedKits)));
+        url.searchParams.set('c', encoded);
+      } catch (e) {
+        console.error("Error encoding custom kits", e);
+      }
+    }
+    
     navigator.clipboard.writeText(url.toString());
     setShareCopied(true);
     setTimeout(() => setShareCopied(false), 2000);
@@ -287,7 +299,8 @@ export default function Admin() {
 
   const handleDelete = (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    if (window.confirm('Tem certeza que deseja remover este kit?')) {
+    const typeName = activeTab === 'kits' ? 'kit' : 'produto';
+    if (window.confirm(`Tem certeza que deseja remover este ${typeName}?`)) {
       removeKit(id);
     }
   };
@@ -427,7 +440,7 @@ export default function Admin() {
                         <div className="px-6 py-4 w-32 shrink-0 h-full flex items-center">
                           {kit.imageUrl ? (
                             <div className="w-16 h-16 rounded overflow-hidden bg-ammare-light/10 shrink-0">
-                              <img src={kit.imageUrl} alt={kit.name} className="w-full h-full object-cover" />
+                              <img src={kit.imageUrl || undefined} alt={kit.name} className="w-full h-full object-cover" />
                             </div>
                           ) : (
                             <div className="w-16 h-16 rounded bg-ammare-light/20 flex items-center justify-center text-[10px] text-ammare-dark/30 tracking-wider shrink-0">
@@ -689,7 +702,7 @@ export default function Admin() {
                         <div className="flex flex-wrap gap-2 mt-2">
                           {editForm.galleryUrls.map((url, i) => (
                             <div key={`form-gallery-${i}`} className="relative w-16 h-16 group">
-                              <img src={url} alt="Galeria" className="w-full h-full object-cover rounded-sm border border-ammare-dark/10" />
+                              <img src={url || undefined} alt="Galeria" className="w-full h-full object-cover rounded-sm border border-ammare-dark/10" />
                               <button
                                 onClick={() => setEditForm({
                                   ...editForm,

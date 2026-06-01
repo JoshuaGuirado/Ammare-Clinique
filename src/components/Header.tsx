@@ -1,7 +1,8 @@
 import { Link, useSearchParams } from 'react-router-dom';
-import { motion } from 'motion/react';
-import { Aperture, Moon, Sun } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
+import { Aperture, Moon, Sun, ShoppingBag } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import { useAppContext } from '../store';
 
 export default function Header() {
   const [isDark, setIsDark] = useState(() => {
@@ -10,6 +11,8 @@ export default function Header() {
   
   const [searchParams] = useSearchParams();
   const isExclusive = searchParams.has('items') || searchParams.get('theme') === 'exclusive';
+  
+  const { customKitSelectedIds } = useAppContext();
 
   useEffect(() => {
     const root = window.document.documentElement;
@@ -59,8 +62,26 @@ export default function Header() {
             >
               {isDark ? <Sun className="w-[14px] h-[14px] md:w-4 md:h-4" /> : <Moon className="w-[14px] h-[14px] md:w-4 md:h-4" />}
             </button>
-            <Link to="/" className={`text-[0.6rem] md:text-[0.65rem] uppercase tracking-[0.2em] transition-colors duration-300 ${isExclusive ? 'text-ammare-white hover:text-ammare-white/50' : 'text-ammare-dark hover:text-ammare-dark/50'}`}>Catálogo</Link>
-            <Link to="/admin" className={`text-[0.6rem] md:text-[0.65rem] uppercase tracking-[0.2em] transition-colors duration-300 ${isExclusive ? 'text-ammare-white/30 hover:text-ammare-white' : 'text-ammare-dark/30 hover:text-ammare-dark'}`}>Admin</Link>
+            <Link to="/" className={`hidden md:block text-[0.6rem] md:text-[0.65rem] uppercase tracking-[0.2em] transition-colors duration-300 ${isExclusive ? 'text-ammare-white hover:text-ammare-white/50' : 'text-ammare-dark hover:text-ammare-dark/50'}`}>Catálogo</Link>
+            
+            <Link to="/meu-kit" className={`flex items-center space-x-1.5 md:space-x-2 text-[0.6rem] md:text-[0.65rem] uppercase tracking-[0.2em] transition-all duration-300 ${isExclusive ? 'text-ammare-white hover:text-ammare-white/80' : 'text-ammare-dark hover:text-ammare-dark/80'}`}>
+              <span className="hidden sm:inline">Seu Kit Personalizado</span>
+              <span className="sm:hidden">Kit</span>
+              <AnimatePresence mode="popLayout">
+                {customKitSelectedIds.length > 0 && (
+                  <motion.span
+                    initial={{ scale: 0, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    exit={{ scale: 0, opacity: 0 }}
+                    className={`flex items-center justify-center w-4 h-4 md:w-5 md:h-5 rounded-full text-[0.5rem] md:text-[0.55rem] font-medium ${isExclusive ? 'bg-ammare-white text-ammare-dark' : 'bg-ammare-dark text-ammare-white'}`}
+                  >
+                    {customKitSelectedIds.length}
+                  </motion.span>
+                )}
+              </AnimatePresence>
+            </Link>
+
+            <Link to="/admin" className={`hidden md:block text-[0.6rem] md:text-[0.65rem] uppercase tracking-[0.2em] transition-colors duration-300 ${isExclusive ? 'text-ammare-white/30 hover:text-ammare-white' : 'text-ammare-dark/30 hover:text-ammare-dark'}`}>Admin</Link>
           </nav>
         </div>
       </div>

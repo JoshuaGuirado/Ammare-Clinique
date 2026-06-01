@@ -15,9 +15,27 @@ export default function Catalog() {
 
   const filteredKits = useMemo(() => {
     const itemsParam = searchParams.get('items');
+    const customParam = searchParams.get('c');
     const allowedIds = itemsParam ? itemsParam.split('_') : null;
     
-    return kits.filter(kit => {
+    let allKits = [...kits];
+    if (customParam) {
+      try {
+        const decodedCustomKits = JSON.parse(decodeURIComponent(atob(customParam)));
+        if (Array.isArray(decodedCustomKits)) {
+          const existingIds = new Set(allKits.map(k => k.id));
+          for (const customKit of decodedCustomKits) {
+            if (!existingIds.has(customKit.id)) {
+              allKits.push(customKit);
+            }
+          }
+        }
+      } catch (e) {
+        console.error("Failed to decode custom kits", e);
+      }
+    }
+    
+    return allKits.filter(kit => {
       if (allowedIds) {
         return allowedIds.includes(kit.id) && kit.isActive !== false;
       }
