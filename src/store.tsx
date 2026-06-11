@@ -49,14 +49,14 @@ const mapKitToDB = (kit: Kit) => {
 
 const mapDBToKit = (k: any): Kit => {
   return {
-    id: k.id,
-    name: k.name,
+    id: k.id || '',
+    name: k.name || '',
     shortDescription: k.short_description || '',
     fullDescription: k.full_description || '',
     items: Array.isArray(k.items) ? k.items : [],
     imageUrl: k.image_url || '',
     galleryUrls: Array.isArray(k.gallery_urls) ? k.gallery_urls : [],
-    category: k.category,
+    category: k.category || 'Outros',
     price: k.price ? Number(k.price) : undefined,
     sizes: Array.isArray(k.sizes) ? k.sizes : [],
     colors: Array.isArray(k.colors) ? k.colors : [],
@@ -65,6 +65,7 @@ const mapDBToKit = (k: any): Kit => {
     isIndividual: k.is_individual === true
   };
 };
+
 
 const mapProductToDB = (p: Product) => {
   return {
@@ -77,12 +78,13 @@ const mapProductToDB = (p: Product) => {
 
 const mapDBToProduct = (p: any): Product => {
   return {
-    id: p.id,
-    name: p.name,
-    category: p.category,
+    id: p.id || '',
+    name: p.name || '',
+    category: p.category || 'Outros',
     imageUrl: p.image_url || undefined
   };
 };
+
 
 export function AppProvider({ children }: { children: React.ReactNode }) {
   const [kits, setKits] = useState<Kit[]>(() => {
