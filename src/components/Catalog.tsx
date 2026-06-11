@@ -45,9 +45,10 @@ export default function Catalog() {
       const isActive = kit.isActive !== false;
       const searchLower = searchQuery.toLowerCase();
       const matchesSearch = 
-        kit.name.toLowerCase().includes(searchLower) || 
-        kit.shortDescription.toLowerCase().includes(searchLower) ||
-        kit.fullDescription.toLowerCase().includes(searchLower);
+        (kit.name || '').toLowerCase().includes(searchLower) || 
+        (kit.shortDescription || '').toLowerCase().includes(searchLower) ||
+        (kit.fullDescription || '').toLowerCase().includes(searchLower);
+
         
       return matchesCategory && isActive && matchesSearch;
     });
