@@ -66,7 +66,6 @@ const mapDBToKit = (k: any): Kit => {
   };
 };
 
-
 const mapProductToDB = (p: Product) => {
   return {
     id: p.id,
@@ -84,7 +83,6 @@ const mapDBToProduct = (p: any): Product => {
     imageUrl: p.image_url || undefined
   };
 };
-
 
 export function AppProvider({ children }: { children: React.ReactNode }) {
   const [kits, setKits] = useState<Kit[]>(() => {
@@ -173,61 +171,44 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       if (!isSupabaseConfigured) return;
 
       try {
-        // 1. Sync Categories
-        const { data: dbCategories, error: catError } = await supabase
-          .from('categories')
-          .select('name');
-        
+        const { data: dbCategories, error: catError } = await supabase.from('categories').select('name');
         if (catError) throw catError;
 
         let finalCategories = categories;
         if (!dbCategories || dbCategories.length === 0) {
-          // Se o banco estiver vazio (primeira vez), semeia com os dados locais
           const seedCategories = categories.filter(cat => cat !== 'Todos').map(cat => ({ name: cat }));
           await supabase.from('categories').insert(seedCategories);
           finalCategories = categories;
         } else {
-          // Se o banco tem dados, ele é a fonte única da verdade
           finalCategories = ['Todos', ...dbCategories.map(c => c.name)];
         }
         setCategories(finalCategories);
 
-        // 2. Sync Products
-        const { data: dbProducts, error: prodError } = await supabase
-          .from('products')
-          .select('*');
-
+        const { data: dbProducts, error: prodError } = await supabase.from('products').select('*');
         if (prodError) throw prodError;
 
         let finalProducts = products;
         if (!dbProducts || dbProducts.length === 0) {
-          // Se o banco estiver vazio (primeira vez), semeia com os dados locais
           const seedProducts = products.map(mapProductToDB);
           await supabase.from('products').insert(seedProducts);
           finalProducts = products;
         } else {
-          // Se o banco tem dados, ele é a fonte única da verdade
           finalProducts = dbProducts.map(mapDBToProduct);
         }
         setProducts(finalProducts);
 
-        // 3. Sync Kits
-        const { data: dbKits, error: kitsError } = await supabase
-          .from('kits')
-          .select('*');
-
+        const { data: dbKits, error: kitsError } = await supabase.from('kits').select('*');
         if (kitsError) throw kitsError;
 
         let finalKits = kits;
         if (!dbKits || dbKits.length === 0) {
-          // Se o banco estiver vazio (primeira vez), semeia com os dados locais
           const seedKits = kits.map(mapKitToDB);
           await supabase.from('kits').insert(seedKits);
           finalKits = kits;
         } else {
-          // Se o banco tem dados, ele é a fonte única da verdade
           finalKits = dbKits.map(mapDBToKit);
         }
+        
         try {
           const searchParams = new URLSearchParams(window.location.search);
           const customParam = searchParams.get('c');
@@ -256,20 +237,31 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     loadData();
   }, []);
 
-  // Save changes locally as instant cache
+  // ESSA É A PARTE QUE CORRIGE O ERRO DA TELA BRANCA
   useEffect(() => {
-    localStorage.setItem('ammare_kits', JSON.stringify(kits));
+    try {
+      localStorage.setItem('ammare_kits', JSON.stringify(kits));
+    } catch (e) {
+      console.warn('Limite de armazenamento excedido para kits, ignorando erro.');
+    }
   }, [kits]);
 
   useEffect(() => {
-    localStorage.setItem('ammare_categories', JSON.stringify(categories));
+    try {
+      localStorage.setItem('ammare_categories', JSON.stringify(categories));
+    } catch (e) {
+      console.warn('Limite de armazenamento excedido para categorias, ignorando erro.');
+    }
   }, [categories]);
 
   useEffect(() => {
-    localStorage.setItem('ammare_products', JSON.stringify(products));
+    try {
+      localStorage.setItem('ammare_products', JSON.stringify(products));
+    } catch (e) {
+      console.warn('Limite de armazenamento excedido para produtos, ignorando erro.');
+    }
   }, [products]);
 
-  // Sanitização Defensiva: Remove qualquer item selecionado que não exista mais na lista de kits
   useEffect(() => {
     if (kits.length > 0 && customKitSelectedIds.length > 0) {
       const sanitized = customKitSelectedIds.filter(id => {
@@ -282,11 +274,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }
   }, [kits, customKitSelectedIds]);
 
-
-
   useEffect(() => {
     localStorage.setItem('ammare_custom_kit', JSON.stringify(customKitSelectedIds));
-    
     if (customKitSelectedIds.length === 0) {
       setCustomKitImage(null);
       setIsGeneratingImage(false);
@@ -297,10 +286,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     if (customKitSelectedIds.length === 0) return;
     setIsGeneratingImage(true);
     try {
-      const selectedProducts = customKitSelectedIds
-        .map(id => kits.find(k => k.id === id))
-        .filter(Boolean);
-        
+      const selectedProducts = customKitSelectedIds.map(id => kits.find(k => k.id === id)).filter(Boolean);
       const selectedNames = selectedProducts.map(k => k.name);
       const selectedImages = selectedProducts.map(k => k.imageUrl).filter(Boolean);
         
@@ -348,30 +334,21 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const addKit = async (kit: Kit) => {
     setKits(prev => [...prev, kit]);
     if (isSupabaseConfigured) {
-      const { error } = await supabase.from('kits').insert(mapKitToDB(kit));
-      if (error) {
-        console.error("Erro ao inserir kit no Supabase:", error);
-      }
+      await supabase.from('kits').insert(mapKitToDB(kit));
     }
   };
 
   const updateKit = async (id: string, updatedKit: Kit) => {
     setKits(prev => prev.map(k => k.id === id ? updatedKit : k));
     if (isSupabaseConfigured) {
-      const { error } = await supabase.from('kits').update(mapKitToDB(updatedKit)).eq('id', id);
-      if (error) {
-        console.error("Erro ao atualizar kit no Supabase:", error);
-      }
+      await supabase.from('kits').update(mapKitToDB(updatedKit)).eq('id', id);
     }
   };
 
   const removeKit = async (id: string) => {
     setKits(prev => prev.filter(k => k.id !== id));
     if (isSupabaseConfigured) {
-      const { error } = await supabase.from('kits').delete().eq('id', id);
-      if (error) {
-        console.error("Erro ao deletar kit no Supabase:", error);
-      }
+      await supabase.from('kits').delete().eq('id', id);
     }
   };
 
@@ -379,10 +356,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     if (!categories.includes(category)) {
       setCategories(prev => [...prev, category]);
       if (isSupabaseConfigured) {
-        const { error } = await supabase.from('categories').insert({ name: category });
-        if (error) {
-          console.error("Erro ao inserir categoria no Supabase:", error);
-        }
+        await supabase.from('categories').insert({ name: category });
       }
     }
   };
@@ -390,40 +364,28 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const removeCategory = async (category: string) => {
     setCategories(prev => prev.filter(c => c !== category));
     if (isSupabaseConfigured) {
-      const { error } = await supabase.from('categories').delete().eq('name', category);
-      if (error) {
-        console.error("Erro ao deletar categoria no Supabase:", error);
-      }
+      await supabase.from('categories').delete().eq('name', category);
     }
   };
 
   const addProduct = async (product: Product) => {
     setProducts(prev => [...prev, product]);
     if (isSupabaseConfigured) {
-      const { error } = await supabase.from('products').insert(mapProductToDB(product));
-      if (error) {
-        console.error("Erro ao inserir produto no Supabase:", error);
-      }
+      await supabase.from('products').insert(mapProductToDB(product));
     }
   };
 
   const updateProduct = async (id: string, updatedProduct: Product) => {
     setProducts(prev => prev.map(p => p.id === id ? updatedProduct : p));
     if (isSupabaseConfigured) {
-      const { error } = await supabase.from('products').update(mapProductToDB(updatedProduct)).eq('id', id);
-      if (error) {
-        console.error("Erro ao atualizar produto no Supabase:", error);
-      }
+      await supabase.from('products').update(mapProductToDB(updatedProduct)).eq('id', id);
     }
   };
 
   const removeProduct = async (id: string) => {
     setProducts(prev => prev.filter(p => p.id !== id));
     if (isSupabaseConfigured) {
-      const { error } = await supabase.from('products').delete().eq('id', id);
-      if (error) {
-        console.error("Erro ao deletar produto no Supabase:", error);
-      }
+      await supabase.from('products').delete().eq('id', id);
     }
   };
 
@@ -450,4 +412,3 @@ export function useAppContext() {
   }
   return context;
 }
-
