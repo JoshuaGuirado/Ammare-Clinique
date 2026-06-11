@@ -86,14 +86,33 @@ const mapDBToProduct = (p: any): Product => {
 export function AppProvider({ children }: { children: React.ReactNode }) {
   const [kits, setKits] = useState<Kit[]>(() => {
     const saved = localStorage.getItem('ammare_kits');
+    let loadedKits = initialKits;
     if (saved) {
       try {
-        return JSON.parse(saved);
+        loadedKits = JSON.parse(saved);
       } catch (e) {
-        return initialKits;
+        loadedKits = initialKits;
       }
     }
-    return initialKits;
+    try {
+      const searchParams = new URLSearchParams(window.location.search);
+      const customParam = searchParams.get('c');
+      if (customParam) {
+        const decoded = JSON.parse(decodeURIComponent(atob(customParam)));
+        if (Array.isArray(decoded)) {
+          const decodedKits = decoded.map(mapDBToKit);
+          const existingIds = new Set(loadedKits.map(k => k.id));
+          for (const kit of decodedKits) {
+            if (!existingIds.has(kit.id)) {
+              loadedKits.push(kit);
+            }
+          }
+        }
+      }
+    } catch (e) {
+      console.error("Erro ao decodificar kits da URL na inicialização:", e);
+    }
+    return loadedKits;
   });
 
   const [categories, setCategories] = useState<string[]>(() => {
@@ -121,6 +140,15 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   });
 
   const [customKitSelectedIds, setCustomKitSelectedIds] = useState<string[]>(() => {
+    try {
+      const searchParams = new URLSearchParams(window.location.search);
+      const itemsParam = searchParams.get('items');
+      if (itemsParam) {
+        return itemsParam.split('_');
+      }
+    } catch (e) {
+      console.error("Erro ao ler items da URL:", e);
+    }
     const saved = localStorage.getItem('ammare_custom_kit');
     if (saved) {
       try {
@@ -197,6 +225,24 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           // Se o banco tem dados, ele é a fonte única da verdade
           finalKits = dbKits.map(mapDBToKit);
         }
+        try {
+          const searchParams = new URLSearchParams(window.location.search);
+          const customParam = searchParams.get('c');
+          if (customParam) {
+            const decoded = JSON.parse(decodeURIComponent(atob(customParam)));
+            if (Array.isArray(decoded)) {
+              const decodedKits = decoded.map(mapDBToKit);
+              const existingIds = new Set(finalKits.map(k => k.id));
+              for (const kit of decodedKits) {
+                if (!existingIds.has(kit.id)) {
+                  finalKits.push(kit);
+                }
+              }
+            }
+          }
+        } catch (e) {
+          console.error("Erro ao decodificar kits da URL no loadData:", e);
+        }
         setKits(finalKits);
 
       } catch (e) {
@@ -220,12 +266,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem('ammare_products', JSON.stringify(products));
   }, [products]);
 
-  // Sanitização Defensiva: Remove qualquer kit completo ou item que não seja produto individual da seleção
+  // Sanitização Defensiva: Remove qualquer item selecionado que não exista mais na lista de kits
   useEffect(() => {
     if (kits.length > 0 && customKitSelectedIds.length > 0) {
       const sanitized = customKitSelectedIds.filter(id => {
-        const item = kits.find(k => k.id === id);
-        return item && item.isIndividual === true;
+        return kits.some(k => k.id === id);
       });
       
       if (sanitized.length !== customKitSelectedIds.length) {
@@ -251,8 +296,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       try {
         const selectedProducts = customKitSelectedIds
           .map(id => kits.find(k => k.id === id))
-          .filter(Boolean)
-          .filter(k => k.isIndividual === true);
+          .filter(Boolean);
           
         const selectedNames = selectedProducts.map(k => k.name);
         const selectedImages = selectedProducts.map(k => k.imageUrl).filter(Boolean);
@@ -292,7 +336,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const addToCustomKit = (id: string) => {
     const item = kits.find(k => k.id === id);
-    if (item && item.isIndividual) {
+    if (item) {
       setCustomKitSelectedIds(prev => prev.includes(id) ? prev : [...prev, id]);
     }
   };
