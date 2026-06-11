@@ -51,7 +51,8 @@ export default function CustomKit() {
     customKitImage, 
     isGeneratingImage,
     customKitTheme,
-    setCustomKitTheme 
+    setCustomKitTheme,
+    generateCustomKitImage
   } = useAppContext();
 
   const selectedItems = useMemo(() => {
@@ -298,11 +299,20 @@ export default function CustomKit() {
                         </div>
                       </div>
                     ) : !isGeneratingImage && (
-                      <div className="text-center p-8 flex flex-col items-center">
-                        <Box className="w-10 h-10 text-ammare-dark/20 mb-3" strokeWidth={1} />
+                      <div className="text-center p-8 flex flex-col items-center gap-4">
+                        <Box className="w-10 h-10 text-ammare-dark/20" strokeWidth={1} />
                         <span className="text-[0.6rem] uppercase tracking-widest text-ammare-dark/40 font-medium">
                           Adicione itens e escolha um tema para gerar a visualização por IA.
                         </span>
+                        {selectedItems.length > 0 && (
+                          <button
+                            onClick={generateCustomKitImage}
+                            className="mt-2 px-6 py-3 bg-ammare-dark text-ammare-white hover:bg-black transition-all text-[0.65rem] uppercase tracking-[0.2em] font-semibold rounded-sm shadow-md cursor-pointer flex items-center gap-2"
+                          >
+                            <Sparkles size={12} className="text-ammare-primary animate-pulse" />
+                            Gerar Imagem com IA
+                          </button>
+                        )}
                       </div>
                     )}
                   </div>
@@ -314,6 +324,15 @@ export default function CustomKit() {
                       animate={{ opacity: 1, y: 0 }}
                       className="mt-6 flex flex-col sm:flex-row gap-4"
                     >
+                      <button 
+                        onClick={generateCustomKitImage}
+                        className="flex-1 flex items-center justify-center gap-2 py-4 border border-ammare-dark/20 text-ammare-dark hover:bg-ammare-dark hover:text-ammare-white hover:border-transparent transition-all text-[0.7rem] uppercase tracking-[0.2em] font-semibold rounded-sm cursor-pointer"
+                        title="Atualizar Foto com a nova seleção/tema"
+                      >
+                        <Sparkles className="w-4 h-4 text-ammare-primary" />
+                        Regerar Imagem
+                      </button>
+
                       <button 
                         onClick={handleWhatsApp}
                         className="flex-1 flex items-center justify-center gap-3 py-4 bg-ammare-dark text-ammare-white hover:bg-black transition-all text-[0.7rem] uppercase tracking-[0.2em] font-semibold shadow-lg rounded-sm cursor-pointer"

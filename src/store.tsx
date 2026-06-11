@@ -22,6 +22,7 @@ interface AppContextType {
   removeFromCustomKit: (id: string) => void;
   customKitTheme: string;
   setCustomKitTheme: (theme: string) => void;
+  generateCustomKitImage: () => Promise<void>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -287,52 +288,49 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     if (customKitSelectedIds.length === 0) {
       setCustomKitImage(null);
       setIsGeneratingImage(false);
-      return;
     }
-    
-    // Auto-generate AI image for custom kit when selection changes
-    const timer = setTimeout(async () => {
-      setIsGeneratingImage(true);
-      try {
-        const selectedProducts = customKitSelectedIds
-          .map(id => kits.find(k => k.id === id))
-          .filter(Boolean);
-          
-        const selectedNames = selectedProducts.map(k => k.name);
-        const selectedImages = selectedProducts.map(k => k.imageUrl).filter(Boolean);
-          
-        let themeDetails = '';
-        if (customKitTheme === 'minimalist_white') {
-          themeDetails = 'The background should be an ultra-minimalist, clean matte white surface with soft, diffused natural window light and subtle shadows.';
-        } else if (customKitTheme === 'luxury_dark' || customKitTheme === 'black_gold') {
-          themeDetails = 'The background should be a dramatic dark slate or black marble surface with sophisticated spotlight lighting, gold metallic highlights, and a luxury clinic vibe.';
-        } else if (customKitTheme === 'botanical_rose' || customKitTheme === 'rose_gold_blossom') {
-          themeDetails = 'The background should be a soft pink clay surface with delicate shadows of organic leaves and modern botanical elements in the scene.';
-        } else {
-          themeDetails = 'The products should be placed on warm sand or organic stone textures, under warm, soft sunlight with a serene wellness aesthetic.';
-        }
-          
-        const prompt = `A highly professional studio product photography of the cosmetic items shown in the attached reference images: ${selectedNames.join(', ')}. Arrange these specific products beautifully side-by-side as a single cohesive set on a flat surface, not in a box. They must look visually identical to the products shown in the reference images (same shapes, same colors, same bottle/jar packaging, same style). Minimalist aesthetic, premium spa and clinic vibe, soft shadows, 8k resolution. ${themeDetails}`;
+  }, [customKitSelectedIds]);
+
+  const generateCustomKitImage = async () => {
+    if (customKitSelectedIds.length === 0) return;
+    setIsGeneratingImage(true);
+    try {
+      const selectedProducts = customKitSelectedIds
+        .map(id => kits.find(k => k.id === id))
+        .filter(Boolean);
         
-        const response = await fetch('/api/generate-kit', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ prompt, images: selectedImages })
-        });
+      const selectedNames = selectedProducts.map(k => k.name);
+      const selectedImages = selectedProducts.map(k => k.imageUrl).filter(Boolean);
         
-        if (response.ok) {
-          const data = await response.json();
-          setCustomKitImage(data.imageUrl);
-        }
-      } catch (e) {
-        console.error('Error generating image', e);
-      } finally {
-        setIsGeneratingImage(false);
+      let themeDetails = '';
+      if (customKitTheme === 'minimalist_white') {
+        themeDetails = 'The background should be an ultra-minimalist, clean matte white surface with soft, diffused natural window light and subtle shadows.';
+      } else if (customKitTheme === 'luxury_dark' || customKitTheme === 'black_gold') {
+        themeDetails = 'The background should be a dramatic dark slate or black marble surface with sophisticated spotlight lighting, gold metallic highlights, and a luxury clinic vibe.';
+      } else if (customKitTheme === 'botanical_rose' || customKitTheme === 'rose_gold_blossom') {
+        themeDetails = 'The background should be a soft pink clay surface with delicate shadows of organic leaves and modern botanical elements in the scene.';
+      } else {
+        themeDetails = 'The products should be placed on warm sand or organic stone textures, under warm, soft sunlight with a serene wellness aesthetic.';
       }
-    }, 2500); // 2.5s debounce to avoid generating on every single click
-    
-    return () => clearTimeout(timer);
-  }, [customKitSelectedIds, customKitTheme, kits]);
+        
+      const prompt = `A highly professional studio product photography of the cosmetic items shown in the attached reference images: ${selectedNames.join(', ')}. Arrange these specific products beautifully side-by-side as a single cohesive set on a flat surface, not in a box. They must look visually identical to the products shown in the reference images (same shapes, same colors, same bottle/jar packaging, same style). Minimalist aesthetic, premium spa and clinic vibe, soft shadows, 8k resolution. ${themeDetails}`;
+      
+      const response = await fetch('/api/generate-kit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt, images: selectedImages })
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setCustomKitImage(data.imageUrl);
+      }
+    } catch (e) {
+      console.error('Error generating image', e);
+    } finally {
+      setIsGeneratingImage(false);
+    }
+  };
 
   const addToCustomKit = (id: string) => {
     const item = kits.find(k => k.id === id);
@@ -435,7 +433,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       addProduct, updateProduct, removeProduct,
       customKitSelectedIds, customKitImage, isGeneratingImage,
       addToCustomKit, removeFromCustomKit,
-      customKitTheme, setCustomKitTheme
+      customKitTheme, setCustomKitTheme,
+      generateCustomKitImage
     }}>
       {children}
     </AppContext.Provider>
